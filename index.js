@@ -1,12 +1,15 @@
-require('dotenv').config({path: 'o.env'});
-const express = require('express');
+import dotenv from 'dotenv';
+import express from 'express';
+import connectDB from './mongoconnect.js';
 const app = express();
 
+dotenv.config({path: "o.env"})
 
 app.get('/', (req, res)=>{
     res.send("hello first project")
 })
 
+connectDB();
 console.log("port from env is: ", process.env.PORT);
 
 const port  = process.env.PORT || 5000;
