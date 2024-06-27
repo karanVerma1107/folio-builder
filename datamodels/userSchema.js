@@ -3,23 +3,27 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
-    username: {
+    userName: {
         type: String,
         unique: true,
         required:true
     },
-    name: {
+    Name: {
         type: String,
         required:true
     },
-    phoneNumber: {
-        type: Number,
+    Email: {
+        type: String,
         required: true,
-        unique: true
+        
     },
     OTP:{
         type: String,
-        required: true
+        
+    },
+    OTP_EXPIRE:{
+        type: Date,
+        
     },
     profilePicture:{//cloud
         type: String,
@@ -29,7 +33,7 @@ const userSchema = new mongoose.Schema({
     },
     profession:{
      type: String,
-     required: true
+     
     },
     education: {
         type: [String]
@@ -44,8 +48,8 @@ achievments:{
     type: [String]
 },
 contacts:{
-    email:{
-    type: String,
+    phoneNumber:{
+    type: Number,
     
     },
     Github: {
@@ -57,7 +61,7 @@ contacts:{
 },
 country:{
     type: String,
-    required: true,
+
 },
 experience:{
     type: [String]
@@ -91,9 +95,20 @@ userSchema.methods.generateAccessToken = function(){
         _id: this._id,
         username: this.username,
         name: this.name,
-        phoneNumber: this.phoneNumber
+        email: this.email
     }, 
 process.env.ACCESS_TOKEN_SECRET,{
     expiresIn: process.env.ACCESS_TOKEN_EXPIRE
 })
 }
+
+userSchema.methods.generateRefreshToken = function(){
+    return jwt.sign({
+        _id: this._id,
+    },
+process.env.REFRESH_TOKEN_SECRET,{
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRE
+})
+}
+
+export const user = mongoose.model('User', userSchema);

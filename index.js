@@ -1,13 +1,19 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import connectDB from './mongoconnect.js';
+import cookieParser from 'cookie-parser';
 const app = express();
+
+app.use(express.json());
+app.use(cookieParser());
 
 dotenv.config({path: "o.env"})
 
-app.get('/', (req, res)=>{
-    res.send("hello first project")
-})
+
+
+//connect from routr file
+import userRoutes from './routes/userRoute.js'
+app.use("/api/v1", userRoutes);
 
 connectDB();
 console.log("port from env is: ", process.env.PORT);
