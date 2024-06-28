@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     Email: {
         type: String,
         required: true,
-        
+        unique: true
     },
     OTP:{
         type: String,
@@ -91,7 +91,7 @@ userSchema.methods.isOTPcorrect = async function(OTP){
 }
 
 userSchema.methods.generateAccessToken = function(){
-    jwt.sign({
+ return   jwt.sign({
         _id: this._id,
         username: this.username,
         name: this.name,
@@ -110,5 +110,5 @@ process.env.REFRESH_TOKEN_SECRET,{
     expiresIn: process.env.REFRESH_TOKEN_EXPIRE
 })
 }
-
-export const user = mongoose.model('User', userSchema);
+const user = mongoose.model('User', userSchema);
+export default user

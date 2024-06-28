@@ -1,6 +1,8 @@
-import { user } from "../datamodels/userSchema.js";
+import  user  from "../datamodels/userSchema.js";
 import sendEmail from "../helpers/sendEmail.js";
-import sendToken from "../helpers/jwtToken.js";
+import ErrorHandler from "../Utlis/apierror.js";
+
+import asyncHandler from "../Utlis/asyncHandler.js";
 
 
 //function that generate OTP
@@ -8,15 +10,48 @@ const generateOTP = ()=>{
     return Math.floor(100000 + Math.random()*900000).toString();
 }
 
-export const otpSendToVerify = async (req,res)=>{
+//generate and save tokens 
+const generateAndsaveTokens = async(user, res)=>{
+    try {
+        const refreshToken = user.generateRefreshToken();
+        user.refreshToken = refreshToken;
+
+        await user.save();
+
+
+        const accessToken =  await user.generateAccessToken();
+        
+        res.cookie('accessToken',
+            accessToken,{
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production'
+
+            }
+        )
+
+        console.log('refreshToken: ', refreshToken);
+        console.log('accessToken: ', accessToken);
+
+        return {refreshToken, accessToken};
+
+
+    } catch (error) {
+        throw new Error('error in generating tokens')
+    }
+}
+
+
+
+
+
+// to send otp
+export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
     const {username, name, email} =  req.body;
 
     try{
         let existingUser = await user.findOne({email});
         if(existingUser){
-            return res.status(400).json({
-                message: 'user already exist with this email'
-            })
+            return next(new ErrorHandler('user already exist with this email', 400))
         }
 
         const otp  = generateOTP();
@@ -48,10 +83,57 @@ export const otpSendToVerify = async (req,res)=>{
 
     }catch(error){
      console.log('error while sending otp is: ', error);
-     return res.status(500).json({
-        success: false,
-        message: 'failed to send OTP, please try again'
-     })
+     return next(new ErrorHandler('something went wrong, please try again', 500))
     }
 
-} 
+} )
+
+export const verifyOtp = asyncHandler(async (req,res,next)=>{
+    const {Email, otp } = req.body;
+    try {
+        const User = await user.findOne({Email});
+
+        if(!User){
+            return next(new ErrorHandler('user not found', 404));
+        }
+
+        if(!User.isOTPcorrect(otp)){
+            return next( new ErrorHandler('Invalid OTP or otp expired ', 400))
+        }
+
+        await generateAndsaveTokens(User, res);
+
+        return res.status(201).json({
+            success: true,
+            User
+        })
+    } catch (error) {
+        return next(new ErrorHandler('internal server error', 500))
+    }
+})
+
+
+
+
+//togetuserDetails---- auth middleware apply here
+export const getUserDetails = asyncHandler( async(req,res,next)=>{
+   try{ 
+const {_id} = req.user;
+
+
+const User = await user.findById(_id);
+if(!user){
+    return next(new ErrorHandler("user not found", 400
+    ))
+}
+    res.status(200).json({
+        success:true,
+        
+        User
+    })
+
+}catch(error){
+    console.log("error is : ", error)
+    return next(new ErrorHandler('internal SERver error', 500))
+}
+})
