@@ -24,7 +24,9 @@ const generateAndsaveTokens = async(user, res)=>{
         res.cookie('accessToken',
             accessToken,{
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production'
+                secure: process.env.NODE_ENV === 'production',
+                expires: new Date( Date.now() + 15*24*60*60*1000 ),
+                path:'/'
 
             }
         )
@@ -36,6 +38,7 @@ const generateAndsaveTokens = async(user, res)=>{
 
 
     } catch (error) {
+        console.log('error of token is:', error)
         throw new Error('error in generating tokens')
     }
 }
@@ -88,6 +91,8 @@ export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
 
 } )
 
+
+// Verify Otp to get login
 export const verifyOtp = asyncHandler(async (req,res,next)=>{
     const {Email, otp } = req.body;
     try {
@@ -97,8 +102,13 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
             return next(new ErrorHandler('user not found', 404));
         }
 
-        if(!User.isOTPcorrect(otp)){
-            return next( new ErrorHandler('Invalid OTP or otp expired ', 400))
+        const isCorrect = await User.isOTPcorrect(otp)
+
+        if(!isCorrect){
+            return  res.status(400).json({
+                success: false,
+                message: 'invalid otp or otp expired'
+            })
         }
 
         await generateAndsaveTokens(User, res);
@@ -108,8 +118,47 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
             User
         })
     } catch (error) {
+        console.log('error is: ', error)
         return next(new ErrorHandler('internal server error', 500))
     }
+})
+
+//Login user 
+export const loginOtp = asyncHandler( async(req,res,next)=>{
+
+    const {Email} = req.body;
+    try {
+        const otp  = generateOTP();
+        const otpexpire = Date.now() + 5*60*1000; 
+
+const User = await user.findOne({Email})
+
+  if(User){
+    console.log('user found', User)
+     User.OTP_EXPIRE = otpexpire;
+     User.OTP = otp;
+     await User.save()  ; 
+  }else{
+    return next(new ErrorHandler('user not found with this email', 404))
+  }
+        const text = `Your  OTP for Login in Stage with username: ${User.userName} is: ${otp}`;
+        
+        await sendEmail({
+            email: User.Email,
+            subject: 'Stage otp verificationn for sign UP',
+            text
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'otp has been sent in your email'
+        })
+
+    } catch (error) {
+        console.log('loginotp error: ', error)
+        return next(new ErrorHandler('internal server error', 500))
+    }
+    
 })
 
 
@@ -135,5 +184,46 @@ if(!user){
 }catch(error){
     console.log("error is : ", error)
     return next(new ErrorHandler('internal SERver error', 500))
+}
+})
+
+//LogOut user by doing token null
+export const logout = asyncHandler( async(req,res,next)=>{
+try{
+ 
+    const curr = req.user;
+
+    if(!curr){
+        return next(new ErrorHandler('user not found', 400));
+    }
+
+    res.cookie('accessToken', null,{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expireSIn: new Date(0),
+        path:'/'
+    })
+
+    res.clearCookie('ascessToken',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expireSIn: new Date(0),
+        path:'/'
+
+    })
+
+if(curr){
+    curr.refreshToken = null;
+}
+
+await curr.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'user logged out successfully'
+    })
+}catch(error){
+    console.log('error is : ', error)
+    return next(new ErrorHandler('logout failed', 500))
 }
 })

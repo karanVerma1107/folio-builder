@@ -86,8 +86,9 @@ userSchema.pre('save', async function(next){
     next();
 });
 
-userSchema.methods.isOTPcorrect = async function(OTP){
-    return await bcrypt.compare(OTP, this.OTP)
+userSchema.methods.isOTPcorrect = async function(OtP){
+    return await bcrypt.compare(OtP, this.OTP)
+
 }
 
 userSchema.methods.generateAccessToken = function(){
