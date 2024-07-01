@@ -5,8 +5,8 @@ import bcrypt from 'bcrypt';
 const userSchema = new mongoose.Schema({
     userName: {
         type: String,
-        unique: true,
-        required:true
+        
+        
     },
     Name: {
         type: String,
@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     Email: {
         type: String,
         required: true,
-        unique: true
+        
     },
     OTP:{
         type: String,
@@ -79,9 +79,9 @@ refreshToken: {
 })
 
 userSchema.pre('save', async function(next){
-    if(this.isModified('OTP') || this.isNew){
-        const saltRounds = 10;
-      this.OTP = await  bcrypt.hash(this.OTP, saltRounds)
+    if(this.isModified('OTP')){
+        const saltRounds = await bcrypt.genSalt(10);
+      this.OTP = await bcrypt.hash(this.OTP, saltRounds)
     }
     next();
 });

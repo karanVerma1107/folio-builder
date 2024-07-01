@@ -47,9 +47,9 @@ const generateAndsaveTokens = async(user, res)=>{
 
 
 
-// to send otp
+// to send otp for signup
 export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
-    const {username, name, email} =  req.body;
+    const { name, email} =  req.body;
 
     try{
         let existingUser = await user.findOne({email});
@@ -58,11 +58,11 @@ export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
         }
 
         const otp  = generateOTP();
-        const otpexpire = Date.now() + 5*60*1000; 
+        const otpexpire = Date.now() + 10*60*1000; 
         
 
-        const tempUser = new user({
-          userName: username,
+        const tempUser = await new user({
+          
           Name: name,
          Email: email,
          OTP: otp,
@@ -71,7 +71,7 @@ export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
 
         await tempUser.save();
       
-        const text = `Your  OTP for signUP in Stage with username: ${tempUser.userName} is: ${otp}`;
+        const text = `Your  OTP for signUP in Stage with username: ${tempUser.Name} is: ${otp}`;
         
         await sendEmail({
             email: tempUser.Email,
@@ -92,8 +92,53 @@ export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
 } )
 
 
-// Verify Otp to get login
+// Verify Otp for signup
 export const verifyOtp = asyncHandler(async (req,res,next)=>{
+    const {Email, otp } = req.body;
+    try {
+        const tempUser = await user.findOne({Email: Email});
+
+       if(!tempUser){
+        return next(new ErrorHandler('Invalid User'))
+       }
+
+
+        const isCorrect = await tempUser.isOTPcorrect(otp)
+
+        if(!isCorrect){
+            await tempUser.deleteOne({Email});
+            return  res.status(400).json({
+                success: false,
+                message: 'invalid otp or otp expired, please try again'
+            })
+           
+        }
+
+       
+        const User = await new user({
+            Name: tempUser.Name,
+            Email: tempUser.Email,
+
+        })
+
+        await User.save();
+        await tempUser.deleteOne({Email});
+        await generateAndsaveTokens(User, res);
+
+        return res.status(201).json({
+            success: true,
+            message: 'otp is verified'
+        })
+    } catch (error) {
+        console.log('error hhhhhh is: ', error)
+        return next(new ErrorHandler('internal server error', 500))
+    }
+})
+
+
+
+//verify otp for login
+export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
     const {Email, otp } = req.body;
     try {
         const User = await user.findOne({Email});
@@ -115,6 +160,7 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
 
         return res.status(201).json({
             success: true,
+            message: 'otp is verified',
             User
         })
     } catch (error) {
@@ -122,6 +168,49 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
         return next(new ErrorHandler('internal server error', 500))
     }
 })
+
+
+//Get unique name 
+ export const getUnique = asyncHandler( async(req, res, next)=>{
+
+    try{
+    const { username } = req.body;
+
+    const isAvialable = await user.findOne({userName: username});
+
+    if(isAvialable){
+        return res.status(400).json({
+            success: false,
+            message: 'this username already exists'
+        })
+    }
+     const {_id} = await req.user;
+
+    const User = await user.findById(_id);
+
+    if(!User){
+   return next( new ErrorHandler('please login to acccess this resource', 402))
+        }
+
+        User.userName = username;
+        await User.save();
+return res.status(200).json({
+    success: true,
+    User
+})
+
+    }catch(error){
+        console.log('your error is: ', error)
+return next(new ErrorHandler('internal server error', 500))
+    }
+
+
+
+    
+})
+
+
+
 
 //Login user 
 export const loginOtp = asyncHandler( async(req,res,next)=>{
@@ -132,6 +221,11 @@ export const loginOtp = asyncHandler( async(req,res,next)=>{
         const otpexpire = Date.now() + 5*60*1000; 
 
 const User = await user.findOne({Email})
+
+if(!User){
+    return next(new ErrorHandler('user not found with this email id', 400))
+}
+
 
   if(User){
     console.log('user found', User)
