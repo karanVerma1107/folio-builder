@@ -3,7 +3,15 @@ import sendEmail from "../helpers/sendEmail.js";
 import ErrorHandler from "../Utlis/apierror.js";
 
 import asyncHandler from "../Utlis/asyncHandler.js";
+import {v2 as cloudinary} from 'cloudinary';
 
+import fs from 'fs'
+
+cloudinary.config({
+    cloud_name: 'dwpdxuksp',
+    api_key: '611646721796323',
+    api_secret: 'ejsJOwHcdFugMNDFy88WXPtPMd8'
+})
 
 //function that generate OTP
 const generateOTP = ()=>{
@@ -66,7 +74,8 @@ export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
           Name: name,
          Email: email,
          OTP: otp,
-         OTP_EXPIRE: otpexpire
+         OTP_EXPIRE: otpexpire,
+         profilePicture:"jhjjhjggj"
         })
 
         await tempUser.save();
@@ -101,7 +110,9 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
        if(!tempUser){
         return next(new ErrorHandler('Invalid User'))
        }
-
+       if(tempUser.OTP_EXPIRE < Date.now()){
+        return next(new ErrorHandler('invalid otp or timeout', 400));
+    }
 
         const isCorrect = await tempUser.isOTPcorrect(otp)
 
@@ -147,6 +158,10 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
             return next(new ErrorHandler('user not found', 404));
         }
 
+        if(User.OTP_EXPIRE < Date.now()){
+            return next(new ErrorHandler('invalid otp or timeout', 400));
+        }
+
         const isCorrect = await User.isOTPcorrect(otp)
 
         if(!isCorrect){
@@ -156,12 +171,15 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
             })
         }
 
+        const alp = User.profilePicture;
+        console.log('profile pic is :', alp);
         await generateAndsaveTokens(User, res);
 
         return res.status(201).json({
             success: true,
             message: 'otp is verified',
-            User
+            User,
+            alp
         })
     } catch (error) {
         console.log('error is: ', error)
@@ -231,6 +249,7 @@ if(!User){
     console.log('user found', User)
      User.OTP_EXPIRE = otpexpire;
      User.OTP = otp;
+     
      await User.save()  ; 
   }else{
     return next(new ErrorHandler('user not found with this email', 404))
@@ -288,7 +307,7 @@ try{
     const curr = req.user;
 
     if(!curr){
-        return next(new ErrorHandler('user not found', 400));
+        return next(new ErrorHandler('user invalid', 400));
     }
 
     res.cookie('accessToken', null,{
@@ -320,4 +339,111 @@ await curr.save();
     console.log('error is : ', error)
     return next(new ErrorHandler('logout failed', 500))
 }
+})
+
+//uploadProfile picture
+export const setProfile = asyncHandler( async(req,res,next)=>{
+    try {
+        console.log("reqq.file is : ", req.file);
+
+        if(!req.file ){
+        
+        return res.status(400).json({
+            message: 'no files have been uploaded'
+        })
+    }
+    
+     const filep = req.file.path;
+     console.log('file is : ', filep)   
+        const result = await cloudinary.uploader.upload(filep) ;
+        //fs.unlinkSync(filep);
+        const curr = req.user;
+console.log('profile uploaded: ', result);
+
+curr.display_pic = result.secure_url;
+await curr.save();
+
+return res.status(200).json({
+    success: true,
+    message: 'profile uploaded successfully',
+    curr
+})
+
+
+    } catch (error) {
+        console.log("error in uploading", error);
+        return next(new ErrorHandler('something went wrong, please try again later', 500))
+    }
+})
+
+
+
+
+//edit profile function === for objects
+export const editobj = asyncHandler(async(req,res,next)=>{
+    const usser = req.user;
+    if(!usser){
+        return next(new ErrorHandler('please login to access this resource', 400));
+    }
+    const updates = Object.keys(req.body);
+    try{
+        updates.forEach(update=>{usser[update] = req.body[update]})
+        await usser.save();
+
+         res.status(200).json({
+usser
+        })
+    }catch(error){
+        console.log('yur erorrr is: ', error);
+        return next(new ErrorHandler('server error', 500));
+    }
+   
+})
+
+
+// edit profile function==== for Array
+export const editProfile = asyncHandler(async(req,res,next)=>{
+    const Usser = req.user;
+
+    if(!Usser){
+        return next(new ErrorHandler('please login to access this resource', 400));
+    }
+
+    const allowedUpdates = [ 'profession', 'education', 'skills', 'projects', 'achievments', 'experience' ];
+
+    const updates = Object.keys(req.body);
+
+    const isValidUpdate = updates.every(update=>allowedUpdates.includes(update));
+
+    if(!isValidUpdate){
+        return next(new ErrorHandler('invalid updates', 400))
+    }
+
+ try {
+    updates.forEach(update=>{
+        if(update === 'Name'|| update === 'bio'|| update === "profession" || update === "education" || update ==="skills"|| update ==="projects"|| update === "achievments"|| update ==="country"|| update=== "experience"){
+if(Array.isArray(req.body[update])){
+    req.body[update].forEach(item=>{
+        if(!Usser[update].includes(item)){
+            Usser[update].push(item)
+        }
+    })
+}else{
+    Usser[update]  = [...Usser[update], req.body[update]]
+}
+
+    }
+
+    })
+
+    await Usser.save();
+
+    return res.status(200).json({
+        success: true,
+        Usser
+    })
+ } catch (error) {
+    console.log('your erorrr is: ', error);
+    return next(new ErrorHandler('server error', 500));
+ }
 })

@@ -25,8 +25,8 @@ const userSchema = new mongoose.Schema({
         type: Date,
         
     },
-    profilePicture:{//cloud
-        type: String,
+    display_pic:{
+        type: String
     },
     bio:{
         type:String
@@ -72,7 +72,11 @@ stars: {
 },
 refreshToken: {
     type: String
-}
+},
+posts:[{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'post'
+}]
 
 },{
     timestamps: true
