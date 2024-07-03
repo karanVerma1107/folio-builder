@@ -48,17 +48,18 @@ achievments:{
     type: [String]
 },
 contacts:{
-    phoneNumber:{
-    type: Number,
-    
-    },
-    Github: {
-        type: String
-    },
-    whatsapp:{
-        type: String
-    }
+    type: [String]
 },
+followers:[
+{
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+}
+],
+following:[{
+    type: mongoose.Schema.ObjectId,
+    ref: 'User'
+}],
 country:{
     type: String,
 

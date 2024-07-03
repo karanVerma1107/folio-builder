@@ -8,9 +8,9 @@ import {v2 as cloudinary} from 'cloudinary';
 import fs from 'fs'
 
 cloudinary.config({
-    cloud_name: 'dwpdxuksp',
-    api_key: '611646721796323',
-    api_secret: 'ejsJOwHcdFugMNDFy88WXPtPMd8'
+    cloud_name: "dwpdxuksp",
+    api_key: "611646721796323",
+    api_secret: "ejsJOwHcdFugMNDFy88WXPtPMd8"
 })
 
 //function that generate OTP
@@ -108,7 +108,7 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
         const tempUser = await user.findOne({Email: Email});
 
        if(!tempUser){
-        return next(new ErrorHandler('Invalid User'))
+        return next(new ErrorHandler('Invalid User or incorrect otp'))
        }
        if(tempUser.OTP_EXPIRE < Date.now()){
         return next(new ErrorHandler('invalid otp or timeout', 400));
@@ -171,7 +171,7 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
             })
         }
 
-        const alp = User.profilePicture;
+        const alp = User.stars;
         console.log('profile pic is :', alp);
         await generateAndsaveTokens(User, res);
 
@@ -180,6 +180,8 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
             message: 'otp is verified',
             User,
             alp
+            
+
         })
     } catch (error) {
         console.log('error is: ', error)
@@ -356,7 +358,7 @@ export const setProfile = asyncHandler( async(req,res,next)=>{
      const filep = req.file.path;
      console.log('file is : ', filep)   
         const result = await cloudinary.uploader.upload(filep) ;
-        //fs.unlinkSync(filep);
+        fs.unlinkSync(filep);
         const curr = req.user;
 console.log('profile uploaded: ', result);
 
@@ -379,7 +381,7 @@ return res.status(200).json({
 
 
 
-//edit profile function === for objects
+//edit profile function === for objects----important for making report
 export const editobj = asyncHandler(async(req,res,next)=>{
     const usser = req.user;
     if(!usser){
@@ -401,7 +403,7 @@ usser
 })
 
 
-// edit profile function==== for Array
+// edit profile function==== for Array---important for makiing report
 export const editProfile = asyncHandler(async(req,res,next)=>{
     const Usser = req.user;
 
@@ -409,7 +411,7 @@ export const editProfile = asyncHandler(async(req,res,next)=>{
         return next(new ErrorHandler('please login to access this resource', 400));
     }
 
-    const allowedUpdates = [ 'profession', 'education', 'skills', 'projects', 'achievments', 'experience' ];
+    const allowedUpdates = [  'education', 'skills', 'projects', 'achievments', 'experience' ];
 
     const updates = Object.keys(req.body);
 
@@ -421,7 +423,7 @@ export const editProfile = asyncHandler(async(req,res,next)=>{
 
  try {
     updates.forEach(update=>{
-        if(update === 'Name'|| update === 'bio'|| update === "profession" || update === "education" || update ==="skills"|| update ==="projects"|| update === "achievments"|| update ==="country"|| update=== "experience"){
+        if(update === 'Name'|| update === 'bio' || update === "education" || update ==="skills"|| update ==="projects"|| update === "achievments"|| update ==="country"|| update=== "experience"){
 if(Array.isArray(req.body[update])){
     req.body[update].forEach(item=>{
         if(!Usser[update].includes(item)){
@@ -446,4 +448,99 @@ if(Array.isArray(req.body[update])){
     console.log('your erorrr is: ', error);
     return next(new ErrorHandler('server error', 500));
  }
+})
+
+
+//clear Usersdata-- importtant in making report
+export const clearProfilestuffs = asyncHandler(async(req, res, next)=>{
+    try {
+        const allowedUpdates = [ 'profession', 'education', 'skills', 'projects', 'achievments', 'experience' ];
+
+        
+    
+const  feild  = req.body.feild;
+
+   console.log("feild is : ", feild) 
+
+        if(!allowedUpdates.includes(feild)){
+            return next(new ErrorHandler('invalid updates', 400))
+        }
+
+        const curr = req.user;
+       const _id = curr._id;
+
+const pdate = {};
+pdate[feild] = [];
+
+         const updateU = await user.findByIdAndUpdate(_id, 
+            {$set: pdate},
+            {new: true}
+         )
+
+         if(!updateU){
+            return   next(new ErrorHandler("user not valid", 400));
+         }
+
+         res.status(200).json({
+            message: "cleared data",
+            updateU
+         })
+
+
+    } catch (error) {
+        console.log('clearing data error: ', error);
+        next(new ErrorHandler("internal server error ", 500))
+    }
+})
+
+
+//get all users as per there star number 
+export const findUser = asyncHandler( async(req, res, next)=>{
+    const search = req.query.q;
+
+    if(!search){
+        return next(new ErrorHandler('please write username you want to search', 400));
+    }
+
+    try {
+       const users = await user.find({
+        userName: {$regex: search, $options: 'i'}
+       }) 
+
+
+        res.status(200).json({
+            users
+        })
+    } catch (error) {
+        console.log("your finding errpr is: ", error);
+        return next(new ErrorHandler('internal server error', 500));
+    }
+} )
+
+
+//give user profile a like 
+export const like = asyncHandler(async(req,res,next)=>{
+    const targetuser = req.params.username;
+try{
+    const userp = await user.findOne({userName:targetuser});
+
+    if(!userp){
+        return next(new ErrorHandler('cannot process it now', 400));
+    }
+userp.stars = userp.stars + 1;
+
+await userp.save();
+
+const al = userp.stars;
+
+res.status(200).json({
+    message: `liked ${userp.userName}'s profile.`,
+    al
+})
+}catch(error){
+console.log('error while likig is: ', error);
+return next(new ErrorHandler('internal server error', 500));
+
+}
+
 })

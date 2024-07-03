@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  editProfile, editobj, getUnique, getUserDetails, loginOtp, logout, otpSendToVerify, setProfile, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
+import {  clearProfilestuffs, editProfile, editobj, findUser, getUnique, getUserDetails, like, loginOtp, logout, otpSendToVerify, setProfile, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
 import { isAuthenticatedUser } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.js";
 //import multer from "multer";
@@ -18,5 +18,9 @@ router.route('/login').post(verifyLoginOtp)
 router.route('/updateProfile').patch(isAuthenticatedUser, editProfile)
 router.route('/editbj').patch(isAuthenticatedUser,editobj)
 router.route('/setProfile').post(isAuthenticatedUser,upload.single("file"), setProfile)
+router.route('/clearData').delete(isAuthenticatedUser, clearProfilestuffs)
+router.route('/searchUser').get(isAuthenticatedUser, findUser);
+router.route('/:username').put(isAuthenticatedUser, like);
+
 
 export default router;
