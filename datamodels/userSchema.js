@@ -71,6 +71,10 @@ stars: {
     type: Number,
     default: 0
 },
+num_of_peo_stared:[{
+type: mongoose.Schema.ObjectId,
+ref: 'User'
+}],
 refreshToken: {
     type: String
 },

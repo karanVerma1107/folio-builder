@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import  user  from "../datamodels/userSchema.js";
 import sendEmail from "../helpers/sendEmail.js";
 import ErrorHandler from "../Utlis/apierror.js";
@@ -521,16 +522,39 @@ export const findUser = asyncHandler( async(req, res, next)=>{
 //give user profile a like 
 export const like = asyncHandler(async(req,res,next)=>{
     const targetuser = req.params.username;
+    const wonder = req.user;
 try{
-    const userp = await user.findOne({userName:targetuser});
-
-    if(!userp){
+    const userp = await user.findOne({userName: targetuser});
+    
+    if(!wonder){
         return next(new ErrorHandler('cannot process it now', 400));
     }
+
+    if(!userp){
+        return next(new ErrorHandler('following user does not exist', 400));
+    }
+
+const logged_in_userid = wonder._id;
+
+if(!userp.num_of_peo_stared.includes(logged_in_userid)){
+
 userp.stars = userp.stars + 1;
 
-await userp.save();
+await userp.num_of_peo_stared.push(logged_in_userid);
 
+await userp.save();
+}else{
+    userp.stars = userp.stars - 1;
+    await userp.updateOne({$pull:{num_of_peo_stared: logged_in_userid}});
+    await userp.save();
+    const als = userp.stars
+    return res.status(200).json({
+        message: `unliked ${userp.userName}'s profile`,
+        als
+    
+    })
+
+}
 const al = userp.stars;
 
 res.status(200).json({
