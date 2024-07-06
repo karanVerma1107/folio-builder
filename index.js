@@ -18,7 +18,8 @@ const __dirname = path.dirname(__filename);
 
 app.use("./uploads",
     express.static(path.join(__dirname, "uploads"))
-)
+);
+//
 
 dotenv.config({path: "o.env"})
 
@@ -28,6 +29,10 @@ dotenv.config({path: "o.env"})
 import userRoutes from './routes/userRoute.js'
 
 app.use("/api/v1", userRoutes);
+
+
+import postRoutes from './routes/postRoutes.js'
+app.use("/api/v1", postRoutes)
 
 connectDB();
 console.log("port from env is: ", process.env.PORT);

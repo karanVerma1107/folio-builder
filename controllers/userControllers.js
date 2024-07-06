@@ -359,7 +359,7 @@ export const setProfile = asyncHandler( async(req,res,next)=>{
      const filep = req.file.path;
      console.log('file is : ', filep)   
         const result = await cloudinary.uploader.upload(filep) ;
-        fs.unlinkSync(filep);
+        fs.unlink(filep);
         const curr = req.user;
 console.log('profile uploaded: ', result);
 

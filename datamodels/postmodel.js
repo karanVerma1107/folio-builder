@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema({
     user_name:{
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
+        type: String,
         required: true
     },
     image:[{
@@ -34,4 +33,7 @@ const postSchema = new mongoose.Schema({
     }],
 
      
-})
+});
+
+const Post = mongoose.model('post', postSchema);
+export default Post;
