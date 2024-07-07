@@ -287,14 +287,38 @@ const {_id} = req.user;
 
 
 const User = await user.findById(_id);
-if(!user){
+if(!User){
     return next(new ErrorHandler("user not found", 400
     ))
 }
+
+
+
+
+const piplines =[
+    {
+        $match: {_id: _id}
+    },{
+        $project: {
+            followerscount: {$cond: {if :{$isArray:"$followers"}, then:{$size: "$followers"}, else: 0}},
+            followingCount:  {$cond: {if :{$isArray:"$following"}, then:{$size: "$following"}, else: 0}}
+        }
+    }
+];
+
+const result = await user.aggregate(piplines);
+
+
+    const {followerscount} = result[0];
+    const {followingCount}= result[0];
+    console.log("result is: ", result);
+    console.log("following count is : ", followingCount);
+
     res.status(200).json({
         success:true,
-        
-        User
+      followerscount,
+      followingCount,
+      User
     })
 
 }catch(error){
@@ -527,7 +551,7 @@ try{
     const userp = await user.findOne({userName: targetuser});
     
     if(!wonder){
-        return next(new ErrorHandler('cannot process it now', 400));
+        return next(new ErrorHandler('cannot process it now, please login to access this resouce', 400));
     }
 
     if(!userp){
@@ -547,10 +571,10 @@ await userp.save();
     userp.stars = userp.stars - 1;
     await userp.updateOne({$pull:{num_of_peo_stared: logged_in_userid}});
     await userp.save();
-    const als = userp.stars
+    const totalLikes = userp.stars
     return res.status(200).json({
         message: `unliked ${userp.userName}'s profile`,
-        als
+        totalLikes
     
     })
 
@@ -567,4 +591,92 @@ return next(new ErrorHandler('internal server error', 500));
 
 }
 
+})
+
+//follower or following 
+export const follow =  asyncHandler(async(req,res,next)=>{
+const userp = req.params.username;
+const curr = req.user;
+try {
+
+if(!userp){
+    return next(new ErrorHandler("user not found", 404));
+}
+if(!curr){
+    return next(new ErrorHandler("cannot process this request, please login to access this resource", 400));
+}
+
+const cuurID = curr._id;
+
+ const opuser = await user.findOne({userName: userp});
+ const opuserID = opuser._id;
+if(!opuser.followers.includes(cuurID)){
+ await   opuser.followers.push(cuurID);
+  await  curr.following.push(opuserID);
+  await curr.save();
+  await opuser.save();
+}else{
+    await opuser.updateOne({$pull:{followers: cuurID}});
+    await curr.updateOne({$pull:{following: opuserID}});
+
+    await curr.save();
+    await opuser.save();
+
+    return res.status(200).json({
+        message:`unfollowed ${opuser.userName}.`
+    })
+} 
+res.status(200).json({
+    message:`followed ${opuser.userName}`
+})
+
+
+} catch (error) {
+    console.log('errror while following is : ', error);
+
+    return next(new ErrorHandler('internal server error', 500)
+    )
+}
+
+
+})
+
+//get any user
+export  const getotherUser = asyncHandler(async(req,res,next)=>{
+    const usern = req.params.username;
+    try {
+      const opuser = await user.findOne({userName: usern});
+      
+      const _id = opuser._id;
+
+      const piplines =[
+        {
+            $match: {_id: _id}
+        },{
+            $project: {
+                followerscount: {$cond: {if :{$isArray:"$followers"}, then:{$size: "$followers"}, else: 0}},
+                followingCount:  {$cond: {if :{$isArray:"$following"}, then:{$size: "$following"}, else: 0}}
+            }
+        }
+    ];
+    
+    const result = await user.aggregate(piplines);
+    
+    
+        const {followerscount} = result[0];
+        const {followingCount}= result[0];
+        console.log("result is: ", result);
+        console.log("following count is : ", followingCount);
+    
+        res.status(200).json({
+            success:true,
+          followerscount,
+          followingCount,
+          opuser
+        })
+      
+    } catch (error) {
+        console.log("error while showing another user detail: ", error);
+        return next(new ErrorHandler("internal server error", 500)) 
+    }
 })

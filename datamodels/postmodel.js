@@ -24,10 +24,10 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     }],
-    commentla:{
-        type: String
-    }, 
     comments:[{
+        type: String
+    }], 
+    commentla:[{
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     }],
