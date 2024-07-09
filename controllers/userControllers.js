@@ -153,7 +153,7 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
 export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
     const {Email, otp } = req.body;
     try {
-        const User = await user.findOne({Email});
+        const User = await user.findOne({Email}).populate("posts").populate("followers").populate("following").populate("num_of_peo_stared");
 
         if(!User){
             return next(new ErrorHandler('user not found', 404));
@@ -286,7 +286,7 @@ export const getUserDetails = asyncHandler( async(req,res,next)=>{
 const {_id} = req.user;
 
 
-const User = await user.findById(_id);
+const User = await user.findById(_id).populate('posts').populate('followers').populate('following').populate("num_of_peo_stared");
 if(!User){
     return next(new ErrorHandler("user not found", 400
     ))
@@ -383,12 +383,20 @@ export const setProfile = asyncHandler( async(req,res,next)=>{
      const filep = req.file.path;
      console.log('file is : ', filep)   
         const result = await cloudinary.uploader.upload(filep) ;
-        fs.unlink(filep);
+        
         const curr = req.user;
 console.log('profile uploaded: ', result);
 
 curr.display_pic = result.secure_url;
 await curr.save();
+
+fs.unlink(filep, (err)=>{
+    if(err){
+        console.log(`fail to delete file: ${filep}`, err)
+    }else{
+        console.log("file deleted from local server")
+    }
+})
 
 return res.status(200).json({
     success: true,
@@ -645,7 +653,7 @@ res.status(200).json({
 export  const getotherUser = asyncHandler(async(req,res,next)=>{
     const usern = req.params.username;
     try {
-      const opuser = await user.findOne({userName: usern});
+      const opuser = await user.findOne({userName: usern}).populate("posts").populate("followers").populate("following").populate("num_of_peo_stared");
       
       const _id = opuser._id;
 

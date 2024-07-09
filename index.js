@@ -15,7 +15,7 @@ app.use(cookieParser());
 //multer stuff
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+// conspiracy check
 app.use("./uploads",
     express.static(path.join(__dirname, "uploads"))
 );
@@ -25,14 +25,20 @@ dotenv.config({path: "o.env"})
 
 
 
-//connect from routr file
+//connect from routr file for user
 import userRoutes from './routes/userRoute.js'
-
 app.use("/api/v1", userRoutes);
 
-
+//connect post router
 import postRoutes from './routes/postRoutes.js'
-app.use("/api/v1", postRoutes)
+app.use("/api/v1", postRoutes);
+
+import commentRoutes from './routes/commentRoutes.js'
+app.use("/api/v1", commentRoutes);
+
+
+
+
 
 connectDB();
 console.log("port from env is: ", process.env.PORT);

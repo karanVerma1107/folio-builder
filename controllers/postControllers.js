@@ -22,10 +22,10 @@ export const makePost = asyncHandler(async(req,res,next)=>{
         const Files = req.files;
         if(Files){
            const curr = req.user;
-           const name = curr.userName;
+           const currID = curr._id;
            const {Category, Caption} = req.body;
            const newPost = await new Post({
-            user_name: name,
+            user_name: currID,
             category: Category,
             caption: Caption
            });
@@ -67,10 +67,10 @@ export const makePost = asyncHandler(async(req,res,next)=>{
 
         }else{
             const curr = req.user;
-            const name = curr.userName;
+            const currID = curr._id;
             const {Category, Caption} = req.body;
             const newPost = await new Post({
-             user_name: name,
+             user_name: currID,
              category: Category,
              caption: Caption
             });
@@ -144,4 +144,50 @@ export const likepost = asyncHandler(async(req,res,next)=>{
         return next(new ErrorHandler("internal server error", 500)
         )
     }
+})
+
+//get followers post 
+export const getFollowerPost = asyncHandler(async(req,res,next)=>{
+    const curr = req.user;
+
+    try {
+        if(!curr){
+            return next(new ErrorHandler("loggin to access this resource", 400));
+        }
+
+
+        //legend line
+        const followerPosts = await Post.find({user_name: {$in: curr.followers}}).populate("user_name").populate("commentla");
+
+        
+        
+
+        if(followerPosts.length == 0){
+            return next(new ErrorHandler("there is no post to show, kindly explore other posts", 400));
+        }
+       
+        res.status(200).json({
+            followerPosts
+        })
+
+    } catch (error) {
+        console.log("error while getting followers post is : ", error);
+        return next(new ErrorHandler("internal server error", 500))
+    }
+})
+
+
+//get all posts 
+export const getAllposts = asyncHandler(async(req,res,next)=>{
+
+    const posts = await Post.find().populate("user_name", "display_pic userName").populate("commentla").populate("no_peo_liked","display_pic userName" )
+         
+
+    if(posts.length == 0){
+        return next(new ErrorHandler("be the first one to upload in this app", 400));
+    }
+
+    res.status(200).json({
+        posts
+    })
 })

@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema({
     user_name:{
-        type: String,
+        type: mongoose.Types.ObjectId,
+        ref:'User',
         required: true
     },
     image:[{
@@ -24,15 +25,18 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     }],
-    comments:[{
-        type: String
-    }], 
+    links:[{
+     type: String
+    }],
     commentla:[{
         type: mongoose.Schema.ObjectId,
-        ref: 'User'
+        ref: 'Comment'
     }],
 
      
+},
+{
+    timestamps: true
 });
 
 const Post = mongoose.model('post', postSchema);
