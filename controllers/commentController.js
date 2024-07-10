@@ -49,3 +49,47 @@ const CommentIID = Comment._id;
         return next(new ErrorHandler("internal server error", 500))
     }
 });
+
+
+//like any comment 
+export const likeComment = asyncHandler(async(req,res,next)=>{
+    const curr = req.user;
+    const  commentId = req.params.commentId;
+    try {
+        if(!curr){
+            return next(new ErrorHandler("kindly login to access this resource", 400));
+        }
+
+    if(!commentId){
+        return next(new ErrorHandler("invalid comment", 400));
+    }
+        const Comment = await comment.findById(commentId).populate("user_name").populate("stars").populate("replies");
+
+
+if(!Comment.no_of_peo_liked.includes(curr._id)){
+ Comment.stars = Comment.stars + 1;
+   await  Comment.no_of_peo_liked.push(curr._id);
+    await Comment.save();
+}else{
+  Comment.stars = Comment.stars -1;
+  await Comment.updateOne({
+    $pull: {no_of_peo_liked: curr._id}
+  })
+await Comment.save();
+const al = Comment.stars;
+return res.status(200).json({
+    message:"unliked successfully",
+    al
+})
+}
+
+const ul = Comment.stars;
+res.status(200).json({
+    message:"liked successfully",
+    ul
+})
+}catch (error) {
+      console.log("error while liking comment", error);
+      return next(new ErrorHandler("internal server error", 500));  
+    }
+})
