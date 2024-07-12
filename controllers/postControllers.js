@@ -167,7 +167,7 @@ export const getFollowerPost = asyncHandler(async(req,res,next)=>{
         }
        
         res.status(200).json({
-            followerPosts
+           posts: followerPosts
         })
 
     } catch (error) {
@@ -188,6 +188,6 @@ export const getAllposts = asyncHandler(async(req,res,next)=>{
     }
 
     res.status(200).json({
-        posts
+       posts: posts
     })
 })

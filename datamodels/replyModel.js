@@ -15,10 +15,10 @@ const repliesModel = new mongoose.Schema({
         type:String,
         required: true
     },
-    replies:{
+    replies:[{
         type: mongoose.Schema.ObjectId,
         ref:"reply"
-    },
+    }],
     stars:{
         type:Number,
         default: 0

@@ -15,7 +15,8 @@ const commentSchema = new mongoose.Schema({
         type: String,
     },
     replies:[{
-   type: mongoose.Schema.ObjectId
+   type: mongoose.Schema.ObjectId,
+   ref:"reply"
     }],
     stars:{
         type: Number,

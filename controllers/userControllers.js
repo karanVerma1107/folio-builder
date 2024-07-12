@@ -542,7 +542,7 @@ export const findUser = asyncHandler( async(req, res, next)=>{
 
 
         res.status(200).json({
-            users
+           users: users
         })
     } catch (error) {
         console.log("your finding errpr is: ", error);
@@ -680,7 +680,7 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
             success:true,
           followerscount,
           followingCount,
-          opuser
+         user: opuser
         })
       
     } catch (error) {

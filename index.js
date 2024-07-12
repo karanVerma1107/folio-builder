@@ -33,10 +33,13 @@ app.use("/api/v1", userRoutes);
 import postRoutes from './routes/postRoutes.js'
 app.use("/api/v1", postRoutes);
 
+//connect with comment router
 import commentRoutes from './routes/commentRoutes.js'
 app.use("/api/v1", commentRoutes);
 
-
+//connect with reply router 
+import replyrouter from "./routes/replyRoute.js"
+app.use("/api/v1", replyrouter);
 
 
 

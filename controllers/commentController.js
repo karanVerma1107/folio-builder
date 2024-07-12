@@ -92,4 +92,36 @@ res.status(200).json({
       console.log("error while liking comment", error);
       return next(new ErrorHandler("internal server error", 500));  
     }
+});
+
+
+//get comment of a post
+export const getComment_post  = asyncHandler(async(req,res,next)=>{
+
+    const postId = req.params.postId;
+    try {
+        if(!postId){
+            return next(new ErrorHandler("cannot receive post id", 400));
+        }
+        
+const post = await Post.findById(postId).populate("commentla");
+
+
+// heavy learning
+const populatedcomments = await Promise.all(post.commentla.map(async(con)=>{
+    const populatedcomments = await comment.findById(con._id).populate("replies");
+    
+    return populatedcomments
+}))
+
+post.commentla = populatedcomments;
+
+res.status(200).json({
+ comments: post.commentla
+})
+
+    } catch (error) {
+        console.log("getting comments error: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
 })
