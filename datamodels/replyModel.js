@@ -23,10 +23,10 @@ const repliesModel = new mongoose.Schema({
         type:Number,
         default: 0
     },
-    no_of_peo_liked:{
+    no_of_peo_liked:[{
         type: mongoose.Schema.ObjectId,
         ref:"User"
-    }
+    }]
 })
 
 

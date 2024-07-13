@@ -148,4 +148,59 @@ res.status(200).json({
     console.log("error while getting reply reply", error);
     return next(new ErrorHandler("internal server error", 500));
 }
-})
+});
+
+
+
+//like a reply
+export const  likereply = asyncHandler(async(req,res,next)=>{
+    const curr = req.user;
+    const repyId = req.params.replyId;
+    try {
+        if(!curr){
+            return next(new ErrorHandler("please login to access this resource", 400));
+        }
+
+        if(!repyId){
+            return next(new ErrorHandler("cannot get reply id", 400));
+        }
+
+        const reply = await Reply.findById(repyId);
+        if(!reply){
+            return next(new ErrorHandler("cannot get reply", 400));
+        }
+
+        const currid = curr._id;
+
+        if(!reply.no_of_peo_liked.includes(currid)){
+            reply.stars = reply.stars + 1;
+            reply.no_of_peo_liked.push(currid);
+        }else{
+            reply.stars = reply.stars - 1;
+            await reply.updateOne({
+                $pull: {no_of_peo_liked: currid}
+            });
+
+            await reply.save();
+            const al = reply.stars;
+        
+          return  res.status(200).json({
+               message:"unliked successfully",
+               al:al
+            })
+        }
+        
+        await reply.save();
+        const al = reply.stars;
+
+        res.status(200).json({
+            message:"liked successfully",
+            al: al
+        })
+
+        
+    } catch (error) {
+        console.log("error while liking the posts: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
+});
