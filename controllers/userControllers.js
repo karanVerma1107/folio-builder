@@ -735,4 +735,50 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
         console.log("error while showing another user detail: ", error);
         return next(new ErrorHandler("internal server error", 500)) 
     }
-})
+});
+
+
+//getfollowers 
+export const getfollowers = asyncHandler(async(req,res,next)=>{
+    const userid = req.params.userid
+    try {
+        const User = await user.findById(userid);
+
+        const populatefollowers = await Promise.all(User.followers.map(async(mpp)=>{
+            const populatedfollowers = await user.findById(mpp);
+
+            return populatedfollowers
+        }))
+        
+        User.followers = populatefollowers;
+        res.status(200).json({
+            followers: User.followers
+        })
+    } catch (error) {
+        console.log("problem while getting followers is: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
+});
+
+
+//getfollowing
+export const getfollowing = asyncHandler(async(req,res,next)=>{
+    const userid = req.params.userid
+    try {
+        const User = await user.findById(userid);
+
+        const populatefollowing = await Promise.all(User.following.map(async(mpp)=>{
+            const populatedfollowers = await user.findById(mpp);
+
+            return populatedfollowers
+        }))
+        
+        User.following = populatefollowing;
+        res.status(200).json({
+            followings: User.following
+        })
+    } catch (error) {
+        console.log("problem while getting followers is: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
+});
