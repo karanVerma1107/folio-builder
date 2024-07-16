@@ -64,6 +64,9 @@ country:{
     type: String,
 
 },
+city:{
+    type: String
+},
 experience:{
     type: [String]
 },
@@ -81,6 +84,10 @@ refreshToken: {
 posts:[{
     type: mongoose.Schema.ObjectId,
     ref: 'post'
+}],
+notifications:[{
+    type: mongoose.Schema.ObjectId,
+    ref:"notification"
 }]
 
 },{

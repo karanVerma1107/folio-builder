@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import  user  from "../datamodels/userSchema.js";
 import sendEmail from "../helpers/sendEmail.js";
 import ErrorHandler from "../Utlis/apierror.js";
-
+import Notification from "../datamodels/notificationModel.js";
 import asyncHandler from "../Utlis/asyncHandler.js";
 import {v2 as cloudinary} from 'cloudinary';
 
@@ -286,11 +286,22 @@ export const getUserDetails = asyncHandler( async(req,res,next)=>{
 const {_id} = req.user;
 
 
-const User = await user.findById(_id).populate('posts').populate('followers').populate('following').populate("num_of_peo_stared");
+const User = await user.findById(_id).populate('posts').populate('followers').populate('following').populate("num_of_peo_stared").populate("notifications");
 if(!User){
     return next(new ErrorHandler("user not found", 400
     ))
 }
+
+const now = new Date();
+
+User.notifications.forEach(async(notification)=>{
+    if(notification.expiryAt < now){
+        await Notification.findByIdAndDelete(notification);
+    }
+    User.updateOne({
+        $pull:{notifications: notification}
+    });
+});
 
 
 
@@ -313,6 +324,8 @@ const result = await user.aggregate(piplines);
     const {followingCount}= result[0];
     console.log("result is: ", result);
     console.log("following count is : ", followingCount);
+
+    await User.save();
 
     res.status(200).json({
         success:true,
@@ -574,7 +587,7 @@ userp.stars = userp.stars + 1;
 
 await userp.num_of_peo_stared.push(logged_in_userid);
 
-await userp.save();
+
 }else{
     userp.stars = userp.stars - 1;
     await userp.updateOne({$pull:{num_of_peo_stared: logged_in_userid}});
@@ -587,6 +600,23 @@ await userp.save();
     })
 
 }
+
+const text = `${wonder.userName} liked your profile.`;
+const currid = wonder._id;
+const newNotification = await new Notification({
+   message: text,
+   userid: currid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+
+await userp.notifications.push(newNotification._id);
+
+await userp.save();
+
+
 const al = userp.stars;
 
 res.status(200).json({
@@ -634,6 +664,24 @@ if(!opuser.followers.includes(cuurID)){
         message:`unfollowed ${opuser.userName}.`
     })
 } 
+
+
+const text = `${curr.userName} followed you.`;
+const currid = curr._id;
+const newNotification = await new Notification({
+   message: text,
+   userid: currid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+
+await opuser.notifications.push(newNotification._id);
+
+await opuser.save();
+console.log("notifications are: ", opuser.notifications);
+
 res.status(200).json({
     message:`followed ${opuser.userName}`
 })

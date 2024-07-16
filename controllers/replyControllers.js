@@ -3,6 +3,7 @@ import comment from "../datamodels/commentmodel.js";
 import asyncHandler from "../Utlis/asyncHandler.js";
 import ErrorHandler from "../Utlis/apierror.js";
 import Reply from "../datamodels/replyModel.js";
+import Notification from "../datamodels/notificationModel.js";
 
 //make  a reply
 export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
@@ -34,6 +35,24 @@ export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
 
         await reply.save();
 await Comment.save();
+
+
+const text = `${curr.userName} replied to your comment.`;
+const replyid = reply._id
+const newNotification = await new Notification({
+   message: text,
+   replyid: replyid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+const userid = Comment.user_name;
+const User = await user.findById(userid);
+
+await User.notifications.push(newNotification._id);
+await User.save();
+
         res.status(200).json({
             message:"replied successfully",
             reply
@@ -77,6 +96,21 @@ rep.replies.push(reply._id);
         await reply.save();
 await rep.save();
 
+const text = `${curr.userName} replied to you.`;
+const currid = reply._id
+const newNotification = await new Notification({
+   message: text,
+   replyid : currid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+const userid = rep.user_name;
+const User = await user.findById(userid);
+
+await User.notifications.push(newNotification._id);
+await User.save();
 
 
         res.status(200).json({
@@ -191,6 +225,26 @@ export const  likereply = asyncHandler(async(req,res,next)=>{
         }
         
         await reply.save();
+
+
+
+        const text = `${curr.userName} liked your reply.`;
+        const replyid = reply._id;
+        const newNotification = await new Notification({
+           message: text,
+           replyid: replyid,
+           expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+        });
+        
+        await newNotification.save();
+         
+        const userid =  reply.user_name;
+        const User = await user.findById(userid);
+
+        await User.notifications.push(newNotification._id);
+        await User.save();
+
+
         const al = reply.stars;
 
         res.status(200).json({

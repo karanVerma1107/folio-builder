@@ -3,7 +3,7 @@ import Post from "../datamodels/postmodel.js";
 import comment from "../datamodels/commentmodel.js";
 import asyncHandler from "../Utlis/asyncHandler.js";
 import ErrorHandler from "../Utlis/apierror.js";
-
+import Notification from "../datamodels/notificationModel.js";
 
 // make a comment 
 export const makeAcomment = asyncHandler(async(req,res,next)=>{
@@ -38,6 +38,23 @@ export const makeAcomment = asyncHandler(async(req,res,next)=>{
 const CommentIID = Comment._id;
         post.commentla.push(CommentIID);
         await post.save();
+
+ const text = `${curr.userName} commented on your post.`;
+const commentid = Comment._id;
+const newNotification = await new Notification({
+   message: text,
+   commentid: commentid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+const userid = post.user_name;
+const User = await user.findById(userid);
+
+await User.notifications.push(newNotification._id);
+
+await User.save();
 
         res.status(200).json({
             message: "comment successfully made", 
@@ -76,6 +93,26 @@ if(!Comment.no_of_peo_liked.includes(curr._id)){
     $pull: {no_of_peo_liked: curr._id}
   })
 await Comment.save();
+
+const text = `${curr.userName} liked your comment .`;
+const Commentid = Comment._id;
+const newNotification = await new Notification({
+   message: text,
+   commentid: Commentid,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+const userid = Comment.user_name;
+const User = await user.findById(userid);
+
+await User.notifications.push(newNotification);
+await User.save();
+
+
+
+
 const al = Comment.stars;
 return res.status(200).json({
     message:"unliked successfully",

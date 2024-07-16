@@ -2,6 +2,7 @@ import { Router } from "express";
 import {  clearProfilestuffs, editProfile, editobj, findUser, follow, getUnique, getUserDetails, getotherUser, like, loginOtp, logout, otpSendToVerify, setProfile, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
 import { isAuthenticatedUser } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.js";
+import { getNotification } from "../controllers/notificationcontrollers.js";
 //import multer from "multer";
 //const upload = multer({dest: "./backend/uploads"})
 
@@ -23,6 +24,6 @@ router.route('/searchUser').get(isAuthenticatedUser, findUser);
 router.route('/like/:username').put(isAuthenticatedUser, like);
 router.route('/connect/:username').put(isAuthenticatedUser, follow);
 router.route('/:username').get(getotherUser);
-
+router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotification)
 
 export default router;

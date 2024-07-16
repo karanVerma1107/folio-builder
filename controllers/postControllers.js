@@ -2,7 +2,7 @@ import asyncHandler from "../Utlis/asyncHandler.js";
 import user from "../datamodels/userSchema.js";
 import {v2 as cloudinary} from 'cloudinary';
 import Post from "../datamodels/postmodel.js";
-
+import Notification from "../datamodels/notificationModel.js";
 import fs from 'fs'
 import ErrorHandler from "../Utlis/apierror.js";
 
@@ -111,9 +111,10 @@ export const likepost = asyncHandler(async(req,res,next)=>{
             return next(new ErrorHandler("cannot process it now, please login to acccess this resource", 400))
         }
         const currID = curr._id
-
-        const name = post.user_name;
-
+console.log('user id is: ', post.user_name);
+        const nameid = post.user_name;
+        const User = await user.findById(nameid);
+        
     
 
         if(!post.no_peo_liked.includes(currID)){
@@ -128,14 +129,35 @@ export const likepost = asyncHandler(async(req,res,next)=>{
             await post.save();
             const total = post.stars;
             return res.status(200).json({
-                message:`unliked ${name}'s post`,
+                message:`unliked ${User.userName}'s post`,
                 total
             })
         }
+      
+
+        const userid = post.user_name;
+        console.log('userid is: ', userid)
+        
+        
+ const text = `${curr.userName} liked your post.`;
+const newNotification = await new Notification({
+   message: text,
+   postid: post._id,
+   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+});
+
+await newNotification.save();
+
+await User.notifications.push(newNotification._id);
+await  User.save();
+
+
+
+
 
         const totalLikes = post.stars;
         res.status(200).json({
-        message: `you liked ${name}'s post` ,
+        message: `you liked ${User.userName}'s post` ,
         totalLikes
         })
 
