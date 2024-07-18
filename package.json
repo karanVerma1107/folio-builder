@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "folio-builder",
   "private": true,
   "version": "0.0.0",
@@ -22,5 +23,34 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
     "vite": "^5.3.4"
+=======
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "portofolio builder and networking site",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon  src/index.js"
+  },
+  "author": "karan1107",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.2.0",
+    "cookie-parser": "^1.4.6",
+    "cookieparser": "^0.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.0",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.3",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.14",
+    "nodemon": "^3.1.4",
+    "path": "^0.12.7",
+    "twilio": "^5.2.0"
+>>>>>>> origin/main
   }
 }
