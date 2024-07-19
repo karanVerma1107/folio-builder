@@ -210,6 +210,6 @@ export const getAllposts = asyncHandler(async(req,res,next)=>{
     }
 
     res.status(200).json({
-       posts: posts
+        posts
     })
 })
