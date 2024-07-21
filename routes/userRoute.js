@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  clearProfilestuffs, editProfile, editobj, findUser, follow, getUnique, getUserDetails, getfollowers, getfollowing, getotherUser, like, loginOtp, logout, otpSendToVerify, setProfile, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
+import {  clearProfilestuffs, editProfile, editobj, findUser, follow, getUnique, getUserDetails, getfollowers, getfollowing, getotherUser, getuserskill, like, loginOtp, logout, otpSendToVerify, setProfile, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
 import { isAuthenticatedUser } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.js";
 import { getNotification } from "../controllers/notificationcontrollers.js";
@@ -20,13 +20,14 @@ router.route('/updateProfile').patch(isAuthenticatedUser, editProfile)
 router.route('/editbj').patch(isAuthenticatedUser,editobj)
 router.route('/setProfile').post(isAuthenticatedUser,upload.single("file"), setProfile)
 router.route('/clearData').delete(isAuthenticatedUser, clearProfilestuffs)
-router.route('/searchUser').get(isAuthenticatedUser, findUser);
+router.route('/searchUser').get(findUser);
 router.route('/like/:username').put(isAuthenticatedUser, like);
 router.route('/connect/:username').put(isAuthenticatedUser, follow);
 router.route('/:username').get(getotherUser);
 router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotification)
 router.route("/getfollowers/:userid").get(getfollowers);
 router.route("/getfollowing/:userid").get(getfollowing);
+router.route("/getuserbyskill").post(getuserskill);
 
 
 export default router;

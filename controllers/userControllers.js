@@ -540,7 +540,7 @@ pdate[feild] = [];
 })
 
 
-//get all users as per there star number 
+//get all users by name
 export const findUser = asyncHandler( async(req, res, next)=>{
     const search = req.query.q;
 
@@ -701,10 +701,12 @@ res.status(200).json({
 export  const getotherUser = asyncHandler(async(req,res,next)=>{
     const usern = req.params.username;
     try {
-      const opuser = await user.findOne({userName: usern}).populate("posts").populate("followers").populate("following").populate("num_of_peo_stared");
+      const welcome = await user.findOne({userName: usern}).populate("posts").populate("followers").populate("following").populate("num_of_peo_stared");
       
-      const _id = opuser._id;
 
+      console.log('id is: ', welcome);
+      const _id = welcome._id;
+       console.log("unkown id is: ", _id);
       const piplines =[
         {
             $match: {_id: _id}
@@ -728,7 +730,7 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
             success:true,
           followerscount,
           followingCount,
-         user: opuser
+         user: welcome
         })
       
     } catch (error) {
@@ -782,3 +784,25 @@ export const getfollowing = asyncHandler(async(req,res,next)=>{
         return next(new ErrorHandler("internal server error", 500));
     }
 });
+
+
+//get users by skills 
+export const getuserskill = asyncHandler(async(req,res,next)=>{
+    const skill = req.query.skill;
+
+    if(!skill){
+        return next(new ErrorHandler("write skill to get users", 400));
+    }
+    try {//new learning below for array
+        const users = await user.find({
+            skills: new RegExp(skill, 'i')
+        });
+
+        res.status(200).json({
+            users
+        })
+    } catch (error) {
+        console.log("error while getting users is: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
+})
