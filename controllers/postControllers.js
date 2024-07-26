@@ -99,7 +99,7 @@ export const makePost = asyncHandler(async(req,res,next)=>{
 
 //give post a like 
 export const likepost = asyncHandler(async(req,res,next)=>{
-    const postID = req.body.postID;
+    const postID = req.params.postID;
     const curr = req.user;
     try {
         const post = await Post.findById(postID);
@@ -127,10 +127,10 @@ console.log('user id is: ', post.user_name);
                 $pull: {no_peo_liked: currID}
             })
             await post.save();
-            const total = post.stars;
+            
             return res.status(200).json({
                 message:`unliked ${User.userName}'s post`,
-                total
+                
             })
         }
       
@@ -158,7 +158,7 @@ await  User.save();
         const totalLikes = post.stars;
         res.status(200).json({
         message: `you liked ${User.userName}'s post` ,
-        totalLikes
+        
         })
 
     }catch (error) {

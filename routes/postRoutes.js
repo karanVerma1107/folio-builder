@@ -6,7 +6,7 @@ import { getAllposts, getFollowerPost, likepost, makePost } from "../controllers
 const prouter = Router();
 
 prouter.route("/addPost").post(isAuthenticatedUser,upload.any(),makePost);
-prouter.route("/likepost").post(isAuthenticatedUser, likepost);
+prouter.route("/likepost/:postID").post(isAuthenticatedUser, likepost);
 prouter.route("/getFollowPost").post(isAuthenticatedUser, getFollowerPost);
 prouter.route("/getAllPost").post(getAllposts);
 
