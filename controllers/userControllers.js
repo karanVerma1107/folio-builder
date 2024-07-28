@@ -256,7 +256,7 @@ if(!User){
      
      await User.save()  ; 
   }else{
-    return next(new ErrorHandler('user not found with this email', 404))
+    return next(new ErrorHandler('User not found with this Email', 404))
   }
         const text = `Your  OTP for Login in Stage with username: ${User.userName} is: ${otp}`;
         
@@ -268,7 +268,7 @@ if(!User){
 
         res.status(200).json({
             success: true,
-            message: 'OTP has been sent in your email'
+            message: 'OTP has been sent to your Email'
         })
 
     } catch (error) {
