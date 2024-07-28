@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { upload } from './middleware/multer.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import errorHandler from './middleware/errorhandler.js';
 
 const app = express();
 
@@ -41,7 +42,7 @@ app.use("/api/v1", commentRoutes);
 import replyrouter from "./routes/replyRoute.js"
 app.use("/api/v1", replyrouter);
 
-
+app.use(errorHandler);
 
 connectDB();
 console.log("port from env is: ", process.env.PORT);

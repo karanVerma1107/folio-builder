@@ -236,11 +236,12 @@ return next(new ErrorHandler('internal server error', 500))
 //Login user 
 export const loginOtp = asyncHandler( async(req,res,next)=>{
 
-    const {Email} = req.body;
+    const Email = req.body.Email;
     try {
         const otp  = generateOTP();
         const otpexpire = Date.now() + 5*60*1000; 
 
+        console.log("email is: ", Email);
 const User = await user.findOne({Email})
 
 if(!User){
@@ -267,7 +268,7 @@ if(!User){
 
         res.status(200).json({
             success: true,
-            message: 'otp has been sent in your email'
+            message: 'OTP has been sent in your email'
         })
 
     } catch (error) {

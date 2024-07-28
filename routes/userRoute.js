@@ -14,7 +14,7 @@ router.route('/verifysignUpOtp').post(verifyOtp);
 router.route('/setUserName').post(isAuthenticatedUser, getUnique)
 router.route('/me').get(isAuthenticatedUser, getUserDetails);
 router.route('/logout').post(isAuthenticatedUser, logout);
-router.route('/loginOtp').get(loginOtp);
+router.route('/loginOtp').post(loginOtp);
 router.route('/login').post(verifyLoginOtp)
 router.route('/updateProfile').patch(isAuthenticatedUser, editProfile)
 router.route('/editbj').patch(isAuthenticatedUser,editobj)
