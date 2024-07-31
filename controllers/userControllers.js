@@ -58,10 +58,12 @@ const generateAndsaveTokens = async(user, res)=>{
 
 // to send otp for signup
 export const otpSendToVerify = asyncHandler( async (req,res, next)=>{
-    const { name, email} =  req.body;
-
+const name = req.body.name;
+const email = req.body.email;
     try{
-        let existingUser = await user.findOne({email});
+        console.log('email is: ', email);
+        let existingUser = await user.findOne({ Email:  email});
+         console.log('existing user: ', existingUser);
         if(existingUser){
             return next(new ErrorHandler('user already exist with this email', 400))
         }
@@ -323,8 +325,7 @@ const result = await user.aggregate(piplines);
 
     const {followerscount} = result[0];
     const {followingCount}= result[0];
-    console.log("result is: ", result);
-    console.log("following count is : ", followingCount);
+   
 
     await User.save();
 

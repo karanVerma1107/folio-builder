@@ -9,7 +9,7 @@ import { getNotification } from "../controllers/notificationcontrollers.js";
 
 const router = Router();
 
-router.route('/sendOTP').get(otpSendToVerify);
+router.route('/sendOTP').post(otpSendToVerify);
 router.route('/verifysignUpOtp').post(verifyOtp);
 router.route('/setUserName').post(isAuthenticatedUser, getUnique)
 router.route('/me').get(isAuthenticatedUser, getUserDetails);
