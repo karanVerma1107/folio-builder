@@ -178,9 +178,9 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
 
         return res.status(201).json({
             success: true,
-            message: 'otp is verified',
+            message: 'Login successful',
             User,
-            alp
+        
             
 
         })

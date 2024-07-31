@@ -155,7 +155,7 @@ await  User.save();
 
 
 
-        const totalLikes = post.stars;
+    console.log(`you liked ${User.userName}'s post`);
         res.status(200).json({
         message: `you liked ${User.userName}'s post` ,
         
