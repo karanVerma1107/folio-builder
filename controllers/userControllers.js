@@ -138,6 +138,7 @@ export const verifyOtp = asyncHandler(async (req,res,next)=>{
         await User.save();
         await tempUser.deleteOne({Email});
         await generateAndsaveTokens(User, res);
+        console.log('verified otp signup')
 
         return res.status(201).json({
             success: true,
