@@ -200,13 +200,15 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
     try{
     const { username } = req.body;
 
+    if(username.length <= 4){
+        return  next(new ErrorHandler('username should be more than 4 characters.', 400));
+    }
+    
+
     const isAvialable = await user.findOne({userName: username});
 
     if(isAvialable){
-        return res.status(400).json({
-            success: false,
-            message: 'this username already exists'
-        })
+        return  next(new ErrorHandler('username already exists.', 400));
     }
      const {_id} = await req.user;
 
@@ -235,6 +237,10 @@ export const  usernameAvia = asyncHandler( async(req, res, next)=>{
    console.log('executed hai')
     try{
     const { username } = req.body;
+
+    if(username.length <= 4){
+        return  next(new ErrorHandler('username should be more than 4 characters.', 400));
+    }
        console.log('username is ', username);
     const isAvialable = await user.findOne({userName: username});
 
