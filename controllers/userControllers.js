@@ -228,9 +228,40 @@ return res.status(200).json({
 return next(new ErrorHandler('internal server error', 500))
     }
 
+})
 
+// is username avialable
+export const  usernameAvia = asyncHandler( async(req, res, next)=>{
+   console.log('executed hai')
+    try{
+    const { username } = req.body;
+       console.log('username is ', username);
+    const isAvialable = await user.findOne({userName: username});
 
-    
+    if(isAvialable){
+        return next(new ErrorHandler('username already in use.', 400));
+        
+    }
+     const {_id} = await req.user;
+
+    const User = await user.findById(_id);
+
+    if(!User){
+   return next( new ErrorHandler('please login to acccess this resource', 402))
+        }
+
+      
+        await User.save();
+return res.status(200).json({
+    success: true,
+    message:'You can use this Username for your account, it will be your identity here in this platform..'
+})
+
+    }catch(error){
+        console.log('your error is: ', error)
+return next(new ErrorHandler('internal server error', 500))
+    }
+
 })
 
 
