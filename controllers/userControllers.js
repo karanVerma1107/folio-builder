@@ -196,13 +196,13 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
 
 //Get unique name 
  export const getUnique = asyncHandler( async(req, res, next)=>{
-
+    console.log("function run hua bhai")
     try{
     const { username } = req.body;
 
     if(username.length <= 4){
         return  next(new ErrorHandler('username should be more than 4 characters.', 400));
-    }
+    } 
     
 
     const isAvialable = await user.findOne({userName: username});
@@ -222,7 +222,7 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
         await User.save();
 return res.status(200).json({
     success: true,
-    User
+    message: `Username ${username} set successfully.`
 })
 
     }catch(error){
