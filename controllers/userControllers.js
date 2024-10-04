@@ -325,7 +325,8 @@ if(!User){
 export const getUserDetails = asyncHandler( async(req,res,next)=>{
    try{ 
 const {_id} = req.user;
-
+console.log('user id is', _id);
+console.log("runned");
 
 const User = await user.findById(_id).populate('posts').populate('followers').populate('following').populate("num_of_peo_stared").populate("notifications");
 if(!User){
@@ -343,8 +344,6 @@ User.notifications.forEach(async(notification)=>{
         $pull:{notifications: notification}
     });
 });
-
-
 
 
 const piplines =[
@@ -369,7 +368,7 @@ const result = await user.aggregate(piplines);
 
     res.status(200).json({
         success:true,
-      followerscount,
+      followerscount,   
       followingCount,
       User
     })
