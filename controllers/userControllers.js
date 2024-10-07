@@ -478,6 +478,7 @@ export const editobj = asyncHandler(async(req,res,next)=>{
         await usser.save();
 
          res.status(200).json({
+            message: " changes saved successfully.",
 usser
         })
     }catch(error){
@@ -527,6 +528,7 @@ if(Array.isArray(req.body[update])){
 
     return res.status(200).json({
         success: true,
+        message:"changes saved successfully.",
         Usser
     })
  } catch (error) {
