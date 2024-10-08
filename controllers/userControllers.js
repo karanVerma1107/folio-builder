@@ -492,12 +492,13 @@ usser
 // edit profile function==== for Array---important for makiing report
 export const editProfile = asyncHandler(async(req,res,next)=>{
     const Usser = req.user;
+    console.log("incoming is: ", req.body)
 
     if(!Usser){
         return next(new ErrorHandler('please login to access this resource', 400));
     }
 
-    const allowedUpdates = [  'education', 'skills', 'projects', 'achievments', 'experience' ];
+    const allowedUpdates = [  'education', 'skills', 'projects', 'achievments', 'experience', 'contacts' ];
 
     const updates = Object.keys(req.body);
 
@@ -509,7 +510,7 @@ export const editProfile = asyncHandler(async(req,res,next)=>{
 
  try {
     updates.forEach(update=>{
-        if(update === 'Name'|| update === 'bio' || update === "education" || update ==="skills"|| update ==="projects"|| update === "achievments"|| update ==="country"|| update=== "experience"){
+        if( update === "education" || update ==="skills"|| update ==="projects"|| update === "achievments"|| update=== "experience" || update === "contacts"){
 if(Array.isArray(req.body[update])){
     req.body[update].forEach(item=>{
         if(!Usser[update].includes(item)){
@@ -545,8 +546,9 @@ export const clearProfilestuffs = asyncHandler(async(req, res, next)=>{
 
         
     
-const  feild  = req.body.feild;
+const  feild  = req.body.field;
 
+   console.log("req.body: ", req.body);
    console.log("feild is : ", feild) 
 
         if(!allowedUpdates.includes(feild)){
@@ -573,7 +575,7 @@ pdate[feild] = [];
             updateU
          })
 
-
+  
     } catch (error) {
         console.log('clearing data error: ', error);
         next(new ErrorHandler("internal server error ", 500))
