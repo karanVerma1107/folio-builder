@@ -88,7 +88,12 @@ posts:[{
 notifications:[{
     type: mongoose.Schema.ObjectId,
     ref:"notification"
-}]
+}],
+phoneNo: {
+    type: String
+}
+
+
 
 },{
     timestamps: true

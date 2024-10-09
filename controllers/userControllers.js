@@ -475,6 +475,9 @@ export const editobj = asyncHandler(async(req,res,next)=>{
     const updates = Object.keys(req.body);
     try{
         updates.forEach(update=>{usser[update] = req.body[update]})
+
+        
+        
         await usser.save();
 
          res.status(200).json({
