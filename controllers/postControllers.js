@@ -16,7 +16,7 @@ cloudinary.config({
 
 
 
-//make a pssss.
+{/*//make a pssss.
 export const makePost = asyncHandler(async(req,res,next)=>{
     try {
         const Files = req.files;
@@ -95,6 +95,88 @@ export const makePost = asyncHandler(async(req,res,next)=>{
         return next( new ErrorHandler('internal server error', 500))
     }
 });
+
+*/}
+
+
+
+
+
+//make a post new
+export const makePost = asyncHandler(async (req, res, next) => {
+    try {
+        const Files = req.files;
+        const curr = req.user;
+        const currID = curr._id;
+        const { Category, Caption, Links } = req.body;
+
+        // Initialize links to an empty array if not provided
+       
+        const linksArray = Links ? (Array.isArray(Links) ? Links : [Links]) : []; 
+
+        const newPost = new Post({
+            user_name: currID,
+            category: Category,
+            caption: Caption,
+            links: linksArray // Set links to the provided links or empty array
+        });
+
+        // Handle file uploads if files are present
+        if (Files) {
+            // Upload files to Cloudinary
+           // const uploadPromises = Files.map(file => cloudinary.uploader.upload(file.path));
+
+
+           const uploadPromises = Files.map(file => {
+            const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+            return cloudinary.uploader.upload(file.path, { resource_type: resourceType });
+        });
+
+        // Wait for all uploads to complete
+        const uploadResults = await Promise.all(uploadPromises);
+        const MediaUrls = uploadResults.map(result => result.secure_url);
+
+        // Store all URLs in the image field
+        newPost.image = MediaUrls;
+
+
+           // const uploadResults = await Promise.all(uploadPromises);
+           // const ImageUrls = uploadResults.map(result => result.secure_url);
+
+           // newPost.image = ImageUrls;
+
+            Files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) {
+                        console.log(`Failed to delete file: ${file.path}`, err);
+                    } else {
+                        console.log("File deleted from local server");
+                    }
+                });
+            });
+        }
+
+        await newPost.save();
+        const visat = newPost._id;
+
+        console.log('req.body for post add is: ', req.body);
+
+        if (curr) {
+            curr.posts.push(visat);
+            await curr.save();
+        }
+
+        res.status(200).json({
+            message: "Post made successfully",
+            newPost
+        });
+
+    } catch (error) {
+        console.log("Post error is:", error);
+        return next(new ErrorHandler('Internal server error', 500));
+    }
+});
+
 
 
 //give post a like 
