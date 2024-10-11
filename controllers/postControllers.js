@@ -3,7 +3,7 @@ import user from "../datamodels/userSchema.js";
 import {v2 as cloudinary} from 'cloudinary';
 import Post from "../datamodels/postmodel.js";
 import Notification from "../datamodels/notificationModel.js";
-import fs from 'fs'
+import fs from 'fs';
 import ErrorHandler from "../Utlis/apierror.js";
 
 cloudinary.config({
