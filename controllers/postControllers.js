@@ -110,6 +110,8 @@ export const makePost = asyncHandler(async (req, res, next) => {
         const currID = curr._id;
         const { Category, Caption, Links } = req.body;
 
+        console.log('files are: ', Files)
+
         // Initialize links to an empty array if not provided
        
         const linksArray = Links ? (Array.isArray(Links) ? Links : [Links]) : []; 
