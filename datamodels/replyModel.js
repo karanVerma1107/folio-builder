@@ -27,6 +27,9 @@ const repliesModel = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref:"User"
     }]
+},
+{
+    timestamps:true
 })
 
 

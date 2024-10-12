@@ -10,6 +10,9 @@ export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
     const curr = req.user;
     const commentId = req.params.commentId;
     try {
+          console.log('runned')
+
+
         if(!curr){
             return next(new ErrorHandler("please login to access this resource", 400));
         }
@@ -62,6 +65,24 @@ await User.save();
         return next(new ErrorHandler("internal server error", 500));
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //make a reply to reply
 export const reply_to_a_reply = asyncHandler(async(req, res,next)=>{
@@ -127,30 +148,34 @@ await User.save();
 
 
 //get replies of comment
-export const getreplyComment = asyncHandler(async(req,res,next)=>{
+export const getreplyComment = asyncHandler(async (req, res, next) => {
     const commentId = req.params.commentId;
     try {
-        if(!commentId){
-            return next(new ErrorHandler("cannot get comment", 400))
+        if (!commentId) {
+            return next(new ErrorHandler("Cannot get comment", 400));
         }
 
-        const Comment = await comment.findById(commentId).populate("replies");
+        const Comment = await comment.findById(commentId);
+        if (!Comment) {
+            return next(new ErrorHandler("Comment not found", 404));
+        }
 
-       const populatedreplies = await Promise.all(Comment.replies.map(async(con)=>{
-        const populated = await Reply.findById(con._id);
-        return populated
-       }))
+        const populatedReplies = await Promise.all(Comment.replies.map(async (replyId) => {
+            const reply = await Reply.findById(replyId).populate('user_name', 'userName display_pic');
+            return reply ? reply : null; // Return null if reply is not found
+        }));
 
+        // Filter out null values (replies not found)
+        const filteredReplies = populatedReplies.filter(reply => reply !== null);
 
-        Comment.replies = populatedreplies;
         res.status(200).json({
-            replies: Comment.replies
-        })
+            replies: filteredReplies
+        });
     } catch (error) {
-        console.log("error while getting replies", error);
+        console.log("Error while getting replies:", error);
         res.status(500).json({
-            message:"internal server error"
-        })
+            message: "Internal server error"
+        });
     }
 });
 
