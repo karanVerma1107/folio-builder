@@ -57,7 +57,7 @@ await User.notifications.push(newNotification._id);
 await User.save();
 
         res.status(200).json({
-            message: "comment successfully made", 
+            message: "comment made successfully", 
             Comment
         })
 
@@ -133,32 +133,29 @@ res.status(200).json({
 
 
 //get comment of a post
-export const getComment_post  = asyncHandler(async(req,res,next)=>{
-
+export const getComment_post = asyncHandler(async (req, res, next) => {
     const postId = req.params.postId;
+
     try {
-        if(!postId){
-            return next(new ErrorHandler("cannot receive post id", 400));
+        if (!postId) {
+            return next(new ErrorHandler("Cannot receive post ID", 400));
         }
-        
-const post = await Post.findById(postId).populate("commentla");
 
+        // Fetch the post and populate comments along with user details
+        const post = await Post.findById(postId).populate({
+            path: 'commentla', // Populate the comments
+            populate: {
+                path: 'user_name', // Assuming user_name references the User model
+                select: 'userName display_pic' // Select only userName and display_pic
+            }
+        });
 
-// heavy learning
-const populatedcomments = await Promise.all(post.commentla.map(async(con)=>{
-    const populatedcomments = await comment.findById(con._id).populate("replies");
-    
-    return populatedcomments
-}))
-
-post.commentla = populatedcomments;
-
-res.status(200).json({
- comments: post.commentla
-})
+        res.status(200).json({
+            comments: post.commentla.reverse()// Only return the populated comments
+        });
 
     } catch (error) {
-        console.log("getting comments error: ", error);
-        return next(new ErrorHandler("internal server error", 500));
+        console.log("Getting comments error: ", error);
+        return next(new ErrorHandler("Internal server error", 500));
     }
-})
+});
