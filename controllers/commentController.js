@@ -4,6 +4,7 @@ import comment from "../datamodels/commentmodel.js";
 import asyncHandler from "../Utlis/asyncHandler.js";
 import ErrorHandler from "../Utlis/apierror.js";
 import Notification from "../datamodels/notificationModel.js";
+import { createNotification } from "./notificationcontrollers.js";
 
 // make a comment 
 export const makeAcomment = asyncHandler(async(req,res,next)=>{
@@ -123,70 +124,72 @@ export const deleteComment = asyncHandler(async (req, res, next) => {
 
 
 
-
-
-//like any comment 
-export const likeComment = asyncHandler(async(req,res,next)=>{
+// Like or unlike any comment
+export const likeComment = asyncHandler(async (req, res, next) => {
     const curr = req.user;
-    const  commentId = req.params.commentId;
+    const commentId = req.params.commentId;
+console.log("got reached")
     try {
-        if(!curr){
-            return next(new ErrorHandler("kindly login to access this resource", 400));
+        if (!curr) {
+            return next(new ErrorHandler("Kindly login to access this resource", 400));
         }
 
-    if(!commentId){
-        return next(new ErrorHandler("invalid comment", 400));
-    }
-        const Comment = await comment.findById(commentId).populate("user_name").populate("stars").populate("replies");
+        if (!commentId) {
+            return next(new ErrorHandler("Invalid comment", 400));
+        }
 
+        const Comment = await comment.findById(commentId).populate("user_name");
 
-if(!Comment.no_of_peo_liked.includes(curr._id)){
- Comment.stars = Comment.stars + 1;
-   await  Comment.no_of_peo_liked.push(curr._id);
-    await Comment.save();
-}else{
-  Comment.stars = Comment.stars -1;
-  await Comment.updateOne({
-    $pull: {no_of_peo_liked: curr._id}
-  })
-await Comment.save();
+        if (!Comment) {
+            return next(new ErrorHandler("Comment not found", 404));
+        }
 
-const text = `${curr.userName} liked your comment .`;
-const Commentid = Comment._id;
-const newNotification = await new Notification({
-   message: text,
-   commentid: Commentid,
-   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
-});
+        // Check if the user has already liked the comment
+        if (!Comment.no_of_peo_liked.includes(curr._id)) {
+            // Like the comment
+            Comment.stars += 1;
+            Comment.no_of_peo_liked.push(curr._id);
+            await Comment.save();
 
-await newNotification.save();
+            // Create notification if the current user is not the comment author
+            if (Comment.user_name._id.toString() !== curr._id.toString()) {
+                const text = `${curr.userName} liked your comment.`;
+                await createNotification(text, null, Comment._id, null, Comment.user_name._id);
+            }
 
-const userid = Comment.user_name;
-const User = await user.findById(userid);
+            return res.status(200).json({
+                message: "Liked successfully",
+                stars: Comment.stars,
+            });
+        } else {
+            // Unlike the comment
+            Comment.stars -= 1;
+            await Comment.updateOne({
+                $pull: { no_of_peo_liked: curr._id }
+            });
+            await Comment.save();
 
-await User.notifications.push(newNotification);
-await User.save();
-
-
-
-
-const al = Comment.stars;
-return res.status(200).json({
-    message:"unliked successfully",
-    al
-})
-}
-
-const ul = Comment.stars;
-res.status(200).json({
-    message:"liked successfully",
-    ul
-})
-}catch (error) {
-      console.log("error while liking comment", error);
-      return next(new ErrorHandler("internal server error", 500));  
+            return res.status(200).json({
+                message: "Unliked successfully",
+                stars: Comment.stars,
+            });
+        }
+    } catch (error) {
+        console.log("Error while liking comment", error);
+        return next(new ErrorHandler("Internal server error", 500));
     }
 });
+
+
+
+
+
+
+
+
+
+
+
 
 
 //get comment of a post
