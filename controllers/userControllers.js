@@ -733,66 +733,26 @@ res.status(200).json({
 
 //get any user
 export  const getotherUser = asyncHandler(async(req,res,next)=>{
-    const usern = req.params.username;
+    const username = req.params.username;
     try {
-      const welcome = await user.findOne({userName: usern}).populate("posts").populate("followers").populate("following").populate("num_of_peo_stared");
-      
+        // Use find to get all users whose usernames match the query
+        const usersFound = await User.find({ userName: { $regex: username, $options: 'i' } }); // Case-insensitive match
 
-      console.log('id is: ', welcome);
-      const _id = welcome._id;
-       console.log("unkown id is: ", _id);
-      const piplines =[
-        {
-            $match: {_id: _id}
-        },{
-            $project: {
-                followerscount: {$cond: {if :{$isArray:"$followers"}, then:{$size: "$followers"}, else: 0}},
-                followingCount:  {$cond: {if :{$isArray:"$following"}, then:{$size: "$following"}, else: 0}}
-            }
+        if (usersFound.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No users found'
+            });
         }
-    ];
-    
-    const result = await user.aggregate(piplines);
-    
-    
-        const {followerscount} = result[0];
-        const {followingCount}= result[0];
-        console.log("result is: ", result);
-        console.log("following count is : ", followingCount);
-    
+
+        // Return the found users directly
         res.status(200).json({
-            success:true,
-          followerscount,
-          followingCount,
-         user: welcome
-        })
-      
+            success: true,
+            users: usersFound // Send the array of user documents
+        });
     } catch (error) {
-        console.log("error while showing another user detail: ", error);
-        return next(new ErrorHandler("internal server error", 500)) 
-    }
-});
-
-
-//getfollowers 
-export const getfollowers = asyncHandler(async(req,res,next)=>{
-    const userid = req.params.userid
-    try {
-        const User = await user.findById(userid);
-
-        const populatefollowers = await Promise.all(User.followers.map(async(mpp)=>{
-            const populatedfollowers = await user.findById(mpp);
-
-            return populatedfollowers
-        }))
-        
-        User.followers = populatefollowers;
-        res.status(200).json({
-            followers: User.followers
-        })
-    } catch (error) {
-        console.log("problem while getting followers is: ", error);
-        return next(new ErrorHandler("internal server error", 500));
+        console.error("Error while searching for users: ", error);
+        return next(new ErrorHandler("Internal server error", 500));
     }
 });
 
