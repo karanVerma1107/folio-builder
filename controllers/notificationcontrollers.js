@@ -54,3 +54,39 @@ res.status(200).json({
 }
 
 });
+
+
+
+
+
+
+
+
+export const createNotification = async (message, postId, commentId, replyId, userId) => {
+    const notification = new Notification({
+        message,
+        postid: postId,
+        commentid: commentId,
+        replyid: replyId,
+        userid: userId,
+        expiryAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days expiry
+    });
+
+    await notification.save();
+};
+
+
+
+export const getUserNotifications = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user._id; // Use _id to get the user ID
+        const notifications = await Notification.find({ userid: userId }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            notifications,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Server error", error });
+    }
+});

@@ -67,6 +67,63 @@ await User.save();
     }
 });
 
+export const deleteComment = asyncHandler(async (req, res, next) => {
+    const { commentId, postId } = req.params; // Assuming you're sending both IDs in the URL
+    const curr = req.user;
+
+    try {
+        if (!curr) {
+            return next(new ErrorHandler("Login to access this resource", 400));
+        }
+
+        // Find the post
+        const post = await Post.findById(postId).populate("commentla");
+        if (!post) {
+            return next(new ErrorHandler("Post not found", 404));
+        }
+
+        // Find the comment
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return next(new ErrorHandler("Comment not found", 404));
+        }
+
+        // Check if the current user is the owner of the comment or has permission to delete it
+        if (comment.user_name.toString() !== curr._id.toString()) {
+            return next(new ErrorHandler("You are not authorized to delete this comment", 403));
+        }
+
+        // Remove comment from the post's commentla array
+        post.commentla = post.commentla.filter(id => id.toString() !== commentId);
+        await post.save();
+
+        // Delete the comment from the database
+        await Comment.findByIdAndDelete(commentId);
+
+        res.status(200).json({
+            success: true,
+            message: "Comment deleted successfully",
+        });
+    } catch (error) {
+        console.log("Error in deleting comment: ", error);
+        return next(new ErrorHandler("Internal server error", 500));
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //like any comment 
 export const likeComment = asyncHandler(async(req,res,next)=>{

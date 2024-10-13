@@ -4,9 +4,9 @@ import asyncHandler from "../Utlis/asyncHandler.js";
 import ErrorHandler from "../Utlis/apierror.js";
 import Reply from "../datamodels/replyModel.js";
 import Notification from "../datamodels/notificationModel.js";
-
+import { createNotification } from "./notificationcontrollers.js";
 //make  a reply
-export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
+{/*export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
     const curr = req.user;
     const commentId = req.params.commentId;
     try {
@@ -65,6 +65,59 @@ await User.save();
         return next(new ErrorHandler("internal server error", 500));
     }
 });
+*/}
+
+
+
+
+
+export const make_reply_to_comment = async (req, res) => {
+    const { commentId, content, replyToId } = req.body;
+
+    try {
+        const Comment = await comment.findById(commentId);
+        if (!Comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        const replyContent = replyToId
+            ? `@${replyToId.username} ${content}` // Format for reply
+            : `@${Comment.user_name.userName} ${content}`; // Format for main comment
+
+        const reply = new Reply({
+            user_name: req.user.id,
+            commentw: commentId,
+            content: replyContent,
+        });
+
+        await reply.save();
+        Comment.replies.push(reply._id);
+        await Comment.save();
+
+        // Create notification for the original comment's author
+        const originalCommentUserId = comment.user_name; // Assuming this is the user who made the original comment
+        await createNotification(
+            `${req.user.userName} replied to your comment`,
+            Comment.post,
+            Comment._id,
+            reply._id,
+            originalCommentUserId
+        );
+
+        return res.status(200).json({ message: "Reply added", reply });
+    } catch (error) {
+        console.log('error is :' , error);
+        return res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+
+
+
+
+
+
 
 
 

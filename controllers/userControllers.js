@@ -322,62 +322,50 @@ if(!User){
 
 
 //togetuserDetails---- auth middleware apply here
-export const getUserDetails = asyncHandler( async(req,res,next)=>{
-   try{ 
-const {_id} = req.user;
-console.log('user id is', _id);
-console.log("runned");
 
-const User = await user.findById(_id).populate('posts').populate('followers').populate('following').populate("num_of_peo_stared").populate("notifications");
-if(!User){
-    return next(new ErrorHandler("user not found", 400
-    ))
-}
+export const getUserDetails = asyncHandler(async (req, res, next) => {
+    try {
+        const { _id } = req.user;
+        console.log('user id is', _id);
+        console.log("runned");
 
-const now = new Date();
+        const User = await user.findById(_id);
 
-User.notifications.forEach(async(notification)=>{
-    if(notification.expiryAt < now){
-        await Notification.findByIdAndDelete(notification);
+        if (!User) {
+            return next(new ErrorHandler("User not found", 400));
+        }
+
+        const now = new Date();
+
+        // Collect expired notification IDs
+        const expiredNotificationIds = User.notifications
+            .filter(notification => notification.expiryAt < now)
+            .map(notification => notification._id);
+
+        // Delete expired notifications
+        if (expiredNotificationIds.length > 0) {
+            await Notification.deleteMany({ _id: { $in: expiredNotificationIds } });
+            User.notifications = User.notifications.filter(notification => notification.expiryAt >= now);
+        }
+
+        // Count followers and following
+        const followerscount = User.followers.length;
+        const followingCount = User.following.length;
+
+        await User.save();
+
+        res.status(200).json({
+            success: true,
+            followerscount,
+            followingCount,
+            User
+        });
+    } catch (error) {
+        console.log("error is : ", error);
+        return next(new ErrorHandler('Internal server error', 500));
     }
-    User.updateOne({
-        $pull:{notifications: notification}
-    });
 });
 
-
-const piplines =[
-    {
-        $match: {_id: _id}
-    },{
-        $project: {
-            followerscount: {$cond: {if :{$isArray:"$followers"}, then:{$size: "$followers"}, else: 0}},
-            followingCount:  {$cond: {if :{$isArray:"$following"}, then:{$size: "$following"}, else: 0}}
-        }
-    }
-];
-
-const result = await user.aggregate(piplines);
-
-
-    const {followerscount} = result[0];
-    const {followingCount}= result[0];
-   
-
-    await User.save();
-
-    res.status(200).json({
-        success:true,
-      followerscount,   
-      followingCount,
-      User
-    })
-
-}catch(error){
-    console.log("error is : ", error)
-    return next(new ErrorHandler('internal SERver error', 500))
-}
-})
 
 //LogOut user by doing token null
 export const logout = asyncHandler( async(req,res,next)=>{
