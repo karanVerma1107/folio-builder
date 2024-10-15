@@ -63,6 +63,7 @@ res.status(200).json({
 
 
 export const createNotification = async (message, postId, commentId, replyId, userId) => {
+    console.log("i got called")
     const notification = new Notification({
         message,
         postid: postId,
@@ -71,7 +72,7 @@ export const createNotification = async (message, postId, commentId, replyId, us
         userid: userId,
         expiryAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days expiry
     });
-
+     console.log(message);
     await notification.save();
 };
 

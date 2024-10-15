@@ -11,6 +11,8 @@ export const makeAcomment = asyncHandler(async(req,res,next)=>{
     const postID = req.params.postID;
     const curr = req.user;
     try {
+        console.log("postid is: ", postID)
+
         if(!curr){
             return next(new ErrorHandler("login to access this resources", 400))
         }
@@ -67,6 +69,16 @@ await User.save();
         return next(new ErrorHandler("internal server error", 500))
     }
 });
+
+
+
+
+
+
+
+
+
+
 
 export const deleteComment = asyncHandler(async (req, res, next) => {
     const { commentId, postId } = req.params; // Assuming you're sending both IDs in the URL
