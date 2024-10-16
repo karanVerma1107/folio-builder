@@ -736,7 +736,7 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
     const username = req.params.username;
     try {
         // Use find to get all users whose usernames match the query
-        const usersFound = await User.find({ userName: { $regex: username, $options: 'i' } }); // Case-insensitive match
+        const usersFound = await user.find({ userName: { $regex: username, $options: 'i' } }); // Case-insensitive match
 
         if (usersFound.length === 0) {
             return res.status(404).json({
@@ -747,8 +747,8 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
 
         // Return the found users directly
         res.status(200).json({
-            success: true,
-            users: usersFound // Send the array of user documents
+           // success: true,
+             usersFound // Send the array of user documents
         });
     } catch (error) {
         console.error("Error while searching for users: ", error);

@@ -286,12 +286,14 @@ export const getFollowerPost = asyncHandler(async(req,res,next)=>{
 //get all posts 
 export const getAllposts = asyncHandler(async(req,res,next)=>{
 
-    const posts = await Post.find().populate("user_name", "display_pic userName").populate("commentla").populate("no_peo_liked","display_pic userName" )
+    const post = await Post.find().populate("user_name", "display_pic userName").populate("commentla").populate("no_peo_liked","display_pic userName" )
          
 
-    if(posts.length == 0){
+    if(post.length == 0){
         return next(new ErrorHandler("be the first one to upload in this app", 400));
     }
+
+    const posts = post.reverse();
 
     res.status(200).json({
         posts
