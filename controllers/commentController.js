@@ -6,6 +6,10 @@ import ErrorHandler from "../Utlis/apierror.js";
 import Notification from "../datamodels/notificationModel.js";
 import { createNotification } from "./notificationcontrollers.js";
 
+
+
+
+{/*
 // make a comment 
 export const makeAcomment = asyncHandler(async(req,res,next)=>{
     const postID = req.params.postID;
@@ -72,7 +76,91 @@ await User.save();
 
 
 
+*/}
 
+
+// make a comment 
+export const makeAcomment = asyncHandler(async (req, res, next) => {
+    const postID = req.params.postID;
+    const curr = req.user;
+    try {
+        console.log("postid is: ", postID);
+
+        if (!curr) {
+            return next(new ErrorHandler("login to access this resources", 400));
+        }
+        const currID = curr._id;
+        const post = await Post.findById(postID).populate("user_name").populate("commentla");
+        if (!post) {
+            return next(new ErrorHandler("cannot get post", 400));
+        }
+        const ID = post._id;
+        const Content = req.body.Content;
+
+        const Comment = await new comment({
+            user_name: currID,
+            post: ID,
+            content: Content
+        }).populate("post");
+        
+        Comment.populate("user_name", "display_pic userName");
+
+        await Comment.save();
+        const CommentIID = Comment._id;
+        post.commentla.push(CommentIID);
+        await post.save();
+
+        // Notification for the post owner
+        const text = `${curr.userName} commented on your post.`;
+        const commentid = Comment._id;
+        const newNotification = await new Notification({
+            message: text,
+            commentid: commentid,
+            expiryAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+        });
+
+        await newNotification.save();
+
+        const userid = post.user_name;
+        const User = await user.findById(userid);
+        await User.notifications.push(newNotification._id);
+        await User.save();
+
+        // Check for mentions in the comment content
+        const mentionRegex = /\/(\w+)/g;
+        let match;
+        const mentionedUsernames = [];
+
+        while ((match = mentionRegex.exec(Content)) !== null) {
+            mentionedUsernames.push(match[1]); // Extract the username
+        }
+
+        // Send notifications to mentioned users
+        for (const username of mentionedUsernames) {
+            const mentionedUser = await user.findOne({ userName: username });
+            if (mentionedUser) {
+                const mentionNotification = await new Notification({
+                    message: `${curr.userName} mentioned you in a comment.`,
+                    commentid: commentid,
+                    expiryAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+                });
+
+                await mentionNotification.save();
+                await mentionedUser.notifications.push(mentionNotification._id);
+                await mentionedUser.save();
+            }
+        }
+
+        res.status(200).json({
+            message: "comment made successfully",
+            Comment
+        });
+
+    } catch (error) {
+        console.log("error in making comment is: ", error);
+        return next(new ErrorHandler("internal server error", 500));
+    }
+});
 
 
 

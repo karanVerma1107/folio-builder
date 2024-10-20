@@ -16,92 +16,10 @@ cloudinary.config({
 
 
 
-{/*//make a pssss.
-export const makePost = asyncHandler(async(req,res,next)=>{
-    try {
-        const Files = req.files;
-        if(Files){
-           const curr = req.user;
-           const currID = curr._id;
-           const {Category, Caption} = req.body;
-           const newPost = await new Post({
-            user_name: currID,
-            category: Category,
-            caption: Caption
-           });
-
-         //upload files to cloudinary
-         const uploadpromises = Files.map(file=>cloudinary.uploader.upload(file.path));
-
-         const uploadresults = await Promise.all(uploadpromises);
-
-         const ImageUrls = uploadresults.map(result => result.secure_url);
-
-        newPost.image = ImageUrls;
-
-
-        await newPost.save();
-        
-        const visat = newPost._id;
-
-        if(curr){
-            curr.posts.push(visat);
-            await curr.save();
-        }
-
-
-        Files.forEach(file => {
-            fs.unlink(file.path, (err)=>{
-                if(err){
-                    console.log(`fail to delete file: ${file.path}`, err)
-                }else{
-                    console.log("file deleted from local server")
-                }
-            })
-        });
-
-        res.status(200).json({
-            message:"post made successfully",
-            newPost
-        })
-
-        }else{
-            const curr = req.user;
-            const currID = curr._id;
-            const {Category, Caption} = req.body;
-            const newPost = await new Post({
-             user_name: currID,
-             category: Category,
-             caption: Caption
-            });
-            await newPost.save();
-
-
-            const visat = newPost._id;
-
-            if(curr){
-                curr.posts.push(visat);
-                await curr.save();
-            }
-
-            res.status(200).json({
-                message:"post made successfully",
-                newPost
-            })
-        }
-        
-    } catch (error) {
-        console.log("post error is : ", error);
-        return next( new ErrorHandler('internal server error', 500))
-    }
-});
-
-*/}
 
 
 
-
-
+{/*
 //make a post new
 export const makePost = asyncHandler(async (req, res, next) => {
     try {
@@ -178,6 +96,125 @@ export const makePost = asyncHandler(async (req, res, next) => {
         return next(new ErrorHandler('Internal server error', 500));
     }
 });
+
+
+
+
+
+*/}
+
+
+
+
+
+
+
+
+
+
+// Make a post new
+export const makePost = asyncHandler(async (req, res, next) => {
+    try {
+        const Files = req.files;
+        const curr = req.user;
+        const currID = curr._id;
+        const { Category, Caption, Links } = req.body;
+
+        console.log('files are: ', Files);
+
+        // Initialize links to an empty array if not provided
+        const linksArray = Links ? (Array.isArray(Links) ? Links : [Links]) : []; 
+
+        const newPost = new Post({
+            user_name: currID,
+            category: Category,
+            caption: Caption,
+            links: linksArray // Set links to the provided links or empty array
+        });
+
+        // Check for mentions in the Caption
+        const mentionRegex = /\/(\w+)/g; // Regex to match /username format
+        const mentions = Caption.match(mentionRegex); // Find all mentions
+        const mentionedUserIds = []; // To store IDs of mentioned users
+
+        if (mentions) {
+            for (const mention of mentions) {
+                const username = mention.slice(1); // Remove the leading slash
+                const mentionedUser = await user.findOne({ userName: username });
+                
+                if (mentionedUser) {
+                    mentionedUserIds.push(mentionedUser._id);
+
+                    // Create a notification for the mentioned user
+                    const notification = new Notification({
+                        message: `${curr.userName} mentioned you in a post: ${Caption}`,
+                        userid: mentionedUser._id,
+                        postid: newPost._id,
+                        expiryAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+                    });
+
+                    await notification.save();
+
+                    // Push the notification to the mentioned user's notifications array
+                    mentionedUser.notifications.push(notification._id);
+                    await mentionedUser.save(); // Save the updated user document
+                }
+            }
+        }
+
+        // Handle file uploads if files are present
+        if (Files) {
+            const uploadPromises = Files.map(file => {
+                const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'video';
+                return cloudinary.uploader.upload(file.path, { resource_type: resourceType });
+            });
+
+            const uploadResults = await Promise.all(uploadPromises);
+            const MediaUrls = uploadResults.map(result => result.secure_url);
+
+            // Store all URLs in the image field
+            newPost.image = MediaUrls;
+
+            Files.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) {
+                        console.log(`Failed to delete file: ${file.path}`, err);
+                    } else {
+                        console.log("File deleted from local server");
+                    }
+                });
+            });
+        }
+
+        await newPost.save();
+        const visat = newPost._id;
+
+        console.log('req.body for post add is: ', req.body);
+
+        if (curr) {
+            curr.posts.push(visat);
+            await curr.save();
+        }
+
+        res.status(200).json({
+            message: "Post made successfully",
+            newPost
+        });
+
+    } catch (error) {
+        console.log("Post error is:", error);
+        return next(new ErrorHandler('Internal server error', 500));
+    }
+});
+
+
+
+
+
+
+
+
+
 
 
 
