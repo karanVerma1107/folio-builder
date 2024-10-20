@@ -6,110 +6,93 @@ import Reply from "../datamodels/replyModel.js";
 import Notification from "../datamodels/notificationModel.js";
 import { createNotification } from "./notificationcontrollers.js";
 //make  a reply
-{/*export const make_reply_to_comment = asyncHandler(async(req,res,next)=>{
-    const curr = req.user;
-    const commentId = req.params.commentId;
-    try {
-          console.log('runned')
-
-
-        if(!curr){
-            return next(new ErrorHandler("please login to access this resource", 400));
-        }
-        if(!commentId){
-            return next(new ErrorHandler("invalid comment no Id passesd", 400));
-        }
-
-        const Comment = await comment.findById(commentId);
-        if(!Comment){
-            return next(new ErrorHandler("invalid comment", 400));
-
-        }
-        const comId = Comment._id;
-        const Content = req.body.Content;
-        const CurrId = curr._id;
-
-        const reply = await new Reply({
-            user_name:CurrId,
-            commentw:comId,
-            content:Content
-        });
-       await Comment.replies.push(reply._id)
-
-        await reply.save();
-await Comment.save();
-
-
-const text = `${curr.userName} replied to your comment.`;
-const replyid = reply._id
-const newNotification = await new Notification({
-   message: text,
-   replyid: replyid,
-   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
-});
-
-await newNotification.save();
-
-const userid = Comment.user_name;
-const User = await user.findById(userid);
-
-await User.notifications.push(newNotification._id);
-await User.save();
-
-        res.status(200).json({
-            message:"replied successfully",
-            reply
-        })
-    } catch (error) {
-        console.log("error while makinf reply to a comment is: ", error);
-        return next(new ErrorHandler("internal server error", 500));
-    }
-});
-*/}
-
 
 
 
 
 export const make_reply_to_comment = async (req, res) => {
-    const { commentId, content, replyToId } = req.body;
+    
+    const { content } = req.body;
+    const { id } = req.params; // This can be either a comment ID or a reply ID
+    const currUser = req.user; // Current user making the reply
+    const currUserId = currUser._id;
 
     try {
-        const Comment = await comment.findById(commentId);
-        if (!Comment) {
-            return res.status(404).json({ message: "Comment not found" });
+        let commentId; // To hold the associated comment ID for notifications
+
+        // Check if the provided ID is a reply or a comment
+        const existingReply = await Reply.findById(id);
+        if (existingReply) {
+            // If it's a reply, get the associated comment ID
+            commentId = existingReply.commentw;
+        } else {
+            // If it's a comment, use the provided ID directly
+            commentId = id;
         }
 
-        const replyContent = replyToId
-            ? `@${replyToId.username} ${content}` // Format for reply
-            : `@${Comment.user_name.userName} ${content}`; // Format for main comment
-
-        const reply = new Reply({
-            user_name: req.user.id,
-            commentw: commentId,
-            content: replyContent,
+        // Create a new reply
+        const newReply = new Reply({
+            user_name: currUserId, // Reference to user._id
+            comment: commentId, // Associate with the comment
+            content
         });
 
-        await reply.save();
-        Comment.replies.push(reply._id);
-        await Comment.save();
+        await newReply.save();
 
-        // Create notification for the original comment's author
-        const originalCommentUserId = comment.user_name; // Assuming this is the user who made the original comment
-        await createNotification(
-            `${req.user.userName} replied to your comment`,
-            Comment.post,
-            Comment._id,
-            reply._id,
-            originalCommentUserId
-        );
+        // Update the comment with the new reply
+        await Comment.findByIdAndUpdate(commentId, {
+            $push: { replies: newReply._id }
+        });
 
-        return res.status(200).json({ message: "Reply added", reply });
+        // Notify the original comment owner
+        const commentOwner = await Comment.findById(commentId).select('user_name');
+        if (commentOwner.user_name.toString() !== currUserId.toString()) {
+            const notification = new Notification({
+                message: `${currUser.userName} replied to your comment.`,
+                userId: commentOwner.user_name,
+                replyId: newReply._id,
+                expiryAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+            });
+
+            await notification.save();
+
+            // Push the notification to the comment owner's notifications array
+            const ownerUser = await user.findById(commentOwner.user_name);
+            ownerUser.notifications.push(notification._id);
+            await ownerUser.save();
+        }
+
+        // Notify the owner of the original reply if the reply is to a reply
+        if (existingReply) {
+            const replyOwner = existingReply.user_name;
+            if (replyOwner.toString() !== currUserId.toString()) {
+                const replyNotification = new Notification({
+                    message: `${currUser.userName} replied to your reply.`,
+                    userId: replyOwner,
+                    replyId: newReply._id,
+                    expiryAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+                });
+
+                await replyNotification.save();
+
+                // Push the notification to the reply owner's notifications array
+                const replyOwnerUser = await user.findById(replyOwner);
+                replyOwnerUser.notifications.push(replyNotification._id);
+                await replyOwnerUser.save();
+            }
+        }
+
+        res.status(201).json({
+            message: "Reply added successfully",
+            newReply
+        });
     } catch (error) {
-        console.log('error is :' , error);
-        return res.status(500).json({ message: "Server error", error });
+        console.log("Reply error:", error);
+        return next(new ErrorHandler('Internal server error', 500));
     }
 };
+
+
 
 
 
