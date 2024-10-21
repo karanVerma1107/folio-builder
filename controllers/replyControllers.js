@@ -232,8 +232,12 @@ export const getreplyComment = asyncHandler(async (req, res, next) => {
         // Filter out null values (replies not found)
         const filteredReplies = populatedReplies.filter(reply => reply !== null);
 
+         // Sort replies by stars in descending order
+         const sortedReplies = filteredReplies.sort((a, b) => b.stars - a.stars);
+
+
         res.status(200).json({
-            replies: filteredReplies
+            replies: sortedReplies
         });
     } catch (error) {
         console.log("Error while getting replies:", error);
