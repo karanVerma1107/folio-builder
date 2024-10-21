@@ -82,6 +82,34 @@ export const make_reply_to_comment = async (req, res, next) => {
             }
         }
 
+
+
+        const mentionRegex = /\/(\w+)/g;
+        let match;
+        const mentionedUsernames = [];
+
+        while ((match = mentionRegex.exec(content)) !== null) {
+            mentionedUsernames.push(match[1]); // Extract the username
+        }
+
+        // Send notifications to mentioned users
+        for (const username of mentionedUsernames) {
+            const mentionedUser = await user.findOne({ userName: username });
+            if (mentionedUser) {
+                const mentionNotification = new Notification({
+                    message: `${currUser.userName} mentioned you in a reply.`,
+                    replyId: newReply._id,
+                    expiryAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+                });
+
+                await mentionNotification.save();
+                mentionedUser.notifications.push(mentionNotification._id);
+                await mentionedUser.save();
+            }
+        }
+
+
+
         res.status(201).json({
             message: "Reply added successfully",
             newReply

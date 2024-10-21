@@ -241,7 +241,7 @@ export const  usernameAvia = asyncHandler( async(req, res, next)=>{
     if(username.length <= 4){
         return  next(new ErrorHandler('username should be more than 4 characters.', 400));
     }
-       console.log('username is ', username);
+      
     const isAvialable = await user.findOne({userName: username});
 
     if(isAvialable){
