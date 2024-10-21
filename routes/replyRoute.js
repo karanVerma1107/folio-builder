@@ -5,7 +5,7 @@ import { getreplyComment, likereply, make_reply_to_comment, reply_to_a_reply, re
 const rrouter = Router();
 
 //rrouter.route('/replyComment/:commentId').post(isAuthenticatedUser, make_reply_to_comment);
-rrouter.route('/replyComment').post(isAuthenticatedUser, make_reply_to_comment);
+rrouter.route('/replyComment/:id').post(isAuthenticatedUser, make_reply_to_comment);
 
 rrouter.route("/replyreply/:replyId").post(isAuthenticatedUser,reply_to_a_reply);
 rrouter.route("/getreplies/:commentId").get(getreplyComment);

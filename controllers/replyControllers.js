@@ -10,7 +10,7 @@ import { createNotification } from "./notificationcontrollers.js";
 
 
 
-export const make_reply_to_comment = async (req, res) => {
+export const make_reply_to_comment = async (req, res, next) => {
     
     const { content } = req.body;
     const { id } = req.params; // This can be either a comment ID or a reply ID
@@ -19,7 +19,7 @@ export const make_reply_to_comment = async (req, res) => {
 
     try {
         let commentId; // To hold the associated comment ID for notifications
-
+  
         // Check if the provided ID is a reply or a comment
         const existingReply = await Reply.findById(id);
         if (existingReply) {
@@ -33,19 +33,19 @@ export const make_reply_to_comment = async (req, res) => {
         // Create a new reply
         const newReply = new Reply({
             user_name: currUserId, // Reference to user._id
-            comment: commentId, // Associate with the comment
+            commentw: commentId, // Associate with the comment
             content
         });
 
         await newReply.save();
 
         // Update the comment with the new reply
-        await Comment.findByIdAndUpdate(commentId, {
+        await comment.findByIdAndUpdate(commentId, {
             $push: { replies: newReply._id }
         });
 
         // Notify the original comment owner
-        const commentOwner = await Comment.findById(commentId).select('user_name');
+        const commentOwner = await comment.findById(commentId).select('user_name');
         if (commentOwner.user_name.toString() !== currUserId.toString()) {
             const notification = new Notification({
                 message: `${currUser.userName} replied to your comment.`,
