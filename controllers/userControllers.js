@@ -5,6 +5,7 @@ import ErrorHandler from "../Utlis/apierror.js";
 import Notification from "../datamodels/notificationModel.js";
 import asyncHandler from "../Utlis/asyncHandler.js";
 import {v2 as cloudinary} from 'cloudinary';
+import Post from "../datamodels/postmodel.js";
 
 import fs from 'fs'
 
@@ -800,3 +801,34 @@ export const getuserskill = asyncHandler(async(req,res,next)=>{
         return next(new ErrorHandler("internal server error", 500));
     }
 })
+
+ 
+
+// Function to get specific posts by user ID from req.body
+export const getUserPostsById = async (req, res) => {
+    const { id } = req.body; // Get user ID from request body
+
+    try {
+        // Find the user by ID
+        const User = await user.findById(id);
+        if (!User) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const validPosts = []; // Initialize an array to hold valid posts
+
+        // Map through user.posts to fetch each post
+        await Promise.all(User.posts.map(async (postId) => {
+            const post = await Post.findById(postId); // Fetch each post by ID
+            if (post) { // Check if the post exists
+                validPosts.push(post); // Push the entire post object to the array
+            }
+        }));
+
+        // Return the array of valid posts
+        return res.status(200).json({ posts: validPosts });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error', error });
+    }
+};
