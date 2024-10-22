@@ -29,7 +29,7 @@ router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotifi
 router.route("/getfollowing/:userid").get(getfollowing);
 router.route("/getuserbyskill").post(getuserskill);
 router.route("/useravia").post(isAuthenticatedUser, usernameAvia);
-router.route("/getUserPost").get(getUserPostsById);
+router.route("/getUserPost").post(getUserPostsById);
 
 
 export default router;

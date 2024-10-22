@@ -804,26 +804,20 @@ export const getuserskill = asyncHandler(async(req,res,next)=>{
 
  
 
-// Function to get specific posts by user ID from req.body
 export const getUserPostsById = async (req, res) => {
-    const  id  = req.body; // Get user ID from request body
+    const { id } = req.body; // Get user ID from request body
 
     try {
+        console.log("ID is", id);
+        
         // Find the user by ID
-        const User = await user.findById(id);
+        const User = await user.findById(id); // Instance variable
         if (!User) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const validPosts = []; // Initialize an array to hold valid posts
-
-        // Map through user.posts to fetch each post
-        await Promise.all(User.posts.map(async (postId) => {
-            const post = await Post.findById(postId); // Fetch each post by ID
-            if (post) { // Check if the post exists
-                validPosts.push(post); // Push the entire post object to the array
-            }
-        }));
+        // Fetch posts in a single query for efficiency
+        const validPosts = await Post.find({ _id: { $in: User.posts } });
 
         // Return the array of valid posts
         return res.status(200).json({ posts: validPosts });
