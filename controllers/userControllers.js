@@ -817,10 +817,10 @@ export const getUserPostsById = async (req, res) => {
         }
 
         // Fetch posts in a single query for efficiency
-        const validPosts = await Post.find({ _id: { $in: User.posts } });
+        const validPosts = await Post.find({ _id: { $in: User.posts } }).populate("user_name", "display_pic userName").populate("commentla");
 
         // Return the array of valid posts
-        return res.status(200).json({ posts: validPosts });
+        return res.status(200).json({ posts: validPosts.reverse() });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error', error });
