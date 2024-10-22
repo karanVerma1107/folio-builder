@@ -806,7 +806,7 @@ export const getuserskill = asyncHandler(async(req,res,next)=>{
 
 // Function to get specific posts by user ID from req.body
 export const getUserPostsById = async (req, res) => {
-    const { id } = req.body; // Get user ID from request body
+    const  id  = req.body; // Get user ID from request body
 
     try {
         // Find the user by ID
