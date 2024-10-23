@@ -761,8 +761,9 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
 
 // getfollowing
 export const getfollowing = asyncHandler(async (req, res, next) => {
-    const userid = req.body;
+    const {userid} = req.body;
     try {
+        console.log("runnde id")
         const User = await user.findById(userid);
         if (!User) {
             return next(new ErrorHandler("User not found", 404));
@@ -784,8 +785,9 @@ export const getfollowing = asyncHandler(async (req, res, next) => {
 
 // getfollowers
 export const getfollowers = asyncHandler(async (req, res, next) => {
-    const userid = req.body;
+    const userid = req.body.userid;
     try {
+        
         const User = await user.findById(userid);
         if (!User) {
             return next(new ErrorHandler("User not found", 404));

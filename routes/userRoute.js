@@ -30,8 +30,8 @@ router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotifi
 router.route("/getuserbyskill").post(getuserskill);
 router.route("/useravia").post(isAuthenticatedUser, usernameAvia);
 router.route("/getUserPost").post(getUserPostsById);
-router.route("/getfollowers").get(getfollowers);
-router.route("/getfollowing").get(getfollowing);
+router.route("/getfollowers").post(getfollowers);
+router.route("/getfollowing").post(getfollowing);
 
 
 
