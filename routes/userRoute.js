@@ -26,10 +26,11 @@ router.route('/connect/:username').put(isAuthenticatedUser, follow);
 router.route('/:username').get(getotherUser);
 router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotification)
 //router.route("/getfollowers/:userid").get(getfollowers);
-router.route("/getfollowing/:userid").get(getfollowing);
+//router.route("/getfollowing/:userid").get(getfollowing);
 router.route("/getuserbyskill").post(getuserskill);
 router.route("/useravia").post(isAuthenticatedUser, usernameAvia);
 router.route("/getUserPost").post(getUserPostsById);
+
 
 
 export default router;

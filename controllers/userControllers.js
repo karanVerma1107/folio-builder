@@ -758,27 +758,57 @@ export  const getotherUser = asyncHandler(async(req,res,next)=>{
 });
 
 
-//getfollowing
-export const getfollowing = asyncHandler(async(req,res,next)=>{
-    const userid = req.params.userid
+
+// getfollowing
+export const getfollowing = asyncHandler(async (req, res, next) => {
+    const userid = req.body;
     try {
         const User = await user.findById(userid);
+        if (!User) {
+            return next(new ErrorHandler("User not found", 404));
+        }
 
-        const populatefollowing = await Promise.all(User.following.map(async(mpp)=>{
-            const populatedfollowers = await user.findById(mpp);
+        const populatefollowing = await Promise.all(User.following.map(async (mpp) => {
+            const populatedfollowers = await user.findById(mpp).select('userName display_pic'); // Select only userName and display_pic
+            return populatedfollowers;
+        }));
 
-            return populatedfollowers
-        }))
-        
-        User.following = populatefollowing;
         res.status(200).json({
-            followings: User.following
-        })
+            followings: populatefollowing
+        });
     } catch (error) {
-        console.log("problem while getting followers is: ", error);
-        return next(new ErrorHandler("internal server error", 500));
+        console.log("Problem while getting followings is: ", error);
+        return next(new ErrorHandler("Internal server error", 500));
     }
 });
+
+// getfollowers
+export const getfollowers = asyncHandler(async (req, res, next) => {
+    const userid = req.body;
+    try {
+        const User = await user.findById(userid);
+        if (!User) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        const populateFollowers = await Promise.all(User.followers.map(async (followerId) => {
+            const populatedFollower = await user.findById(followerId).select('userName display_pic'); // Select only userName and display_pic
+            return populatedFollower;
+        }));
+
+        res.status(200).json({
+            followers: populateFollowers
+        });
+    } catch (error) {
+        console.log("Problem while getting followers is: ", error);
+        return next(new ErrorHandler("Internal server error", 500));
+    }
+});
+
+
+
+
+
 
 
 //get users by skills 
