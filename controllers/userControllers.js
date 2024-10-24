@@ -666,71 +666,71 @@ return next(new ErrorHandler('internal server error', 500));
 
 })
 
-//follower or following 
-export const follow =  asyncHandler(async(req,res,next)=>{
-const userp = req.params.username;
-const curr = req.user;
-try {
 
-if(!userp){
-    return next(new ErrorHandler("user not found", 404));
-}
-if(!curr){
-    return next(new ErrorHandler("cannot process this request, please login to access this resource", 400));
-}
+//follow unfollow
+export const follow = asyncHandler(async (req, res, next) => {
+    const username = req.params.username;
+    const currentUser = req.user;
+    console.log("getting")
+    try {
+        if (!username) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+        
+        if (!currentUser) {
+            return next(new ErrorHandler("Please log in to access this resource", 400));
+        }
 
-const cuurID = curr._id;
+        const targetUser = await user.findOne({userName: username});
+        if (!targetUser) {
+            return next(new ErrorHandler("Target user not found", 404));
+        }
 
- const opuser = await user.findOne({userName: userp});
- const opuserID = opuser._id;
-if(!opuser.followers.includes(cuurID)){
- await   opuser.followers.push(cuurID);
-  await  curr.following.push(opuserID);
-  await curr.save();
-  await opuser.save();
-}else{
-    await opuser.updateOne({$pull:{followers: cuurID}});
-    await curr.updateOne({$pull:{following: opuserID}});
+        const currentUserId = currentUser._id;
+        const isFollowing = targetUser.followers.includes(currentUserId);
 
-    await curr.save();
-    await opuser.save();
+        // Update followers and following lists
+        if (!isFollowing) {
+            targetUser.followers.push(currentUserId);
+            currentUser.following.push(targetUser._id);
+            await Promise.all([targetUser.save(), currentUser.save()]);
 
-    return res.status(200).json({
-        message:`unfollowed ${opuser.userName}.`
-    })
-} 
+            // Create and save notification
+            const notificationMessage = `${currentUser.userName} followed you.`;
+            const notification = new Notification({
+                message: notificationMessage,
+                userid: currentUserId,
+                expiryAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+            });
 
+            await notification.save();
+            targetUser.notifications.push(notification._id);
+            await targetUser.save();
 
-const text = `${curr.userName} followed you.`;
-const currid = curr._id;
-const newNotification = await new Notification({
-   message: text,
-   userid: currid,
-   expiryAt: new Date(Date.now() + 5*24*60*60*1000)       
+            return res.status(200).json({ message: `Followed ${targetUser.userName}` });
+        } else {
+            await Promise.all([
+                targetUser.updateOne({ $pull: { followers: currentUserId } }),
+                currentUser.updateOne({ $pull: { following: targetUser._id } })
+            ]);
+
+            return res.status(200).json({ message: `Unfollowed ${targetUser.userName}` });
+        }
+
+    } catch (error) {
+        console.error('Error while following:', error);
+        return next(new ErrorHandler('Internal server error', 500));
+    }
 });
 
-await newNotification.save();
 
 
-await opuser.notifications.push(newNotification._id);
-
-await opuser.save();
-console.log("notifications are: ", opuser.notifications);
-
-res.status(200).json({
-    message:`followed ${opuser.userName}`
-})
 
 
-} catch (error) {
-    console.log('errror while following is : ', error);
-
-    return next(new ErrorHandler('internal server error', 500)
-    )
-}
 
 
-})
+
+
 
 //get any user
 export  const getotherUser = asyncHandler(async(req,res,next)=>{
