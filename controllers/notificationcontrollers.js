@@ -80,14 +80,34 @@ export const createNotification = async (message, postId, commentId, replyId, us
 
 export const getUserNotifications = asyncHandler(async (req, res) => {
     try {
-        const userId = req.user._id; // Use _id to get the user ID
-        const notifications = await Notification.find({ userid: userId }).sort({ createdAt: -1 });
+        const userl = req.params.userid; // Extract user from request
+        
+console.log("runnenene");
+        // Fetch the current user
+
+        const currUser = await user.findById(userl);
+        if (!currUser) {
+            return res.status(404).json({ success: false, message: "Login to access this resource" });
+        }
+
+        // Get notifications based on the IDs stored in the user's notifications array
+        const notifications = await Notification.find({ _id: { $in: currUser.notifications } });
+
+        // Create a set of valid notification IDs
+        const validNotificationIds = new Set(notifications.map(notification => notification._id.toString()));
+
+        // Filter out any invalid notification IDs
+        currUser.notifications = currUser.notifications.filter(id => validNotificationIds.has(id.toString()));
+
+        // Optionally save the updated user object to remove invalid IDs
+        await currUser.save();
 
         return res.status(200).json({
             success: true,
             notifications,
         });
     } catch (error) {
-        return res.status(500).json({ message: "Server error", error });
+        console.error("Error fetching user notifications:", error);
+        return res.status(500).json({ success: false, message: "Server error", error });
     }
 });

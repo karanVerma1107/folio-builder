@@ -44,6 +44,11 @@ app.use("/api/v1", replyrouter);
 
 app.use(errorHandler);
 
+
+
+import cors from 'cors';
+app.use(cors());
+
 connectDB();
 console.log("port from env is: ", process.env.PORT);
 

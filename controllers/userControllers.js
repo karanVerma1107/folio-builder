@@ -323,7 +323,7 @@ if(!User){
 
 
 //togetuserDetails---- auth middleware apply here
-
+{/*
 export const getUserDetails = asyncHandler(async (req, res, next) => {
     try {
         const { _id } = req.user;
@@ -337,17 +337,29 @@ export const getUserDetails = asyncHandler(async (req, res, next) => {
         }
 
         const now = new Date();
+        console.log("User notifications before filtering:", User.notifications);
 
-        // Collect expired notification IDs
+
         const expiredNotificationIds = User.notifications
-            .filter(notification => notification.expiryAt < now)
-            .map(notification => notification._id);
+    .filter(notification => notification.expiryAt < now)
+    .map(notification => notification._id);
 
-        // Delete expired notifications
-        if (expiredNotificationIds.length > 0) {
-            await Notification.deleteMany({ _id: { $in: expiredNotificationIds } });
-            User.notifications = User.notifications.filter(notification => notification.expiryAt >= now);
-        }
+console.log("Expired notifications IDs:", expiredNotificationIds);
+
+if (expiredNotificationIds.length > 0) {
+    try {
+        const deleteResult = await Notification.deleteMany({ _id: { $in: expiredNotificationIds } });
+        console.log(`Deleted ${deleteResult.deletedCount} expired notifications.`);
+    } catch (delError) {
+        console.error("Error deleting notifications:", delError);
+        return next(new ErrorHandler('Error deleting notifications', 500));
+    }
+
+    User.notifications = User.notifications.filter(notification => notification.expiryAt >= now);
+    await User.save();
+}
+
+
 
         // Count followers and following
         const followerscount = User.followers.length;
@@ -367,7 +379,7 @@ export const getUserDetails = asyncHandler(async (req, res, next) => {
     }
 });
 
-
+*/}
 //LogOut user by doing token null
 export const logout = asyncHandler( async(req,res,next)=>{
 try{
@@ -408,6 +420,83 @@ await curr.save();
     return next(new ErrorHandler('logout failed', 500))
 }
 })
+
+
+
+
+
+
+
+
+
+
+
+export const getUserDetails = asyncHandler(async (req, res, next) => {
+    try {
+        const { _id } = req.user;
+        console.log('user id is', _id);
+
+        const User = await user.findById(_id).populate('notifications'); // Populate notifications
+        if (!User) {
+            return next(new ErrorHandler("User not found", 400));
+        }
+
+        const now = new Date();
+
+        // Log notifications for debugging
+        console.log("User notifications before filtering:", User.notifications);
+
+        // Collect expired notifications
+        const expiredNotifications = await Notification.find({
+            _id: { $in: User.notifications },
+            expiryAt: { $lt: now } // Check for expiry directly in the query
+        });
+
+        const expiredNotificationIds = expiredNotifications.map(notification => notification._id);
+
+        //console.log("Expired notifications IDs:", expiredNotificationIds);
+
+        // Delete expired notifications
+        if (expiredNotificationIds.length > 0) {
+            try {
+                await Notification.deleteMany({ _id: { $in: expiredNotificationIds } });
+                //console.log(`Deleted ${expiredNotificationIds.length} expired notifications.`);
+            } catch (delError) {
+                console.error("Error deleting notifications:", delError);
+                return next(new ErrorHandler('Error deleting notifications', 500));
+            }
+
+            // Optionally, update user's notifications list if needed
+            User.notifications = User.notifications.filter(notification => !expiredNotificationIds.includes(notification._id));
+        }
+
+        // Count followers and following
+        const followerscount = User.followers.length;
+        const followingCount = User.following.length;
+
+        await User.save();
+
+        res.status(200).json({
+            success: true,
+            followerscount,
+            followingCount,
+            User
+        });
+    } catch (error) {
+        console.log("error is : ", error);
+        return next(new ErrorHandler('Internal server error', 500));
+    }
+});
+
+
+
+
+
+
+
+
+
+
 
 //uploadProfile picture
 export const setProfile = asyncHandler( async(req,res,next)=>{

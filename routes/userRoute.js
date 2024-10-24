@@ -2,7 +2,7 @@ import { Router } from "express";
 import {  clearProfilestuffs, editProfile, editobj, findUser, follow, getUnique, getUserDetails  , getUserPostsById, getfollowers, getfollowing, getotherUser, getuserskill, like, loginOtp, logout, otpSendToVerify, setProfile, usernameAvia, verifyLoginOtp, verifyOtp } from "../controllers/userControllers.js";
 import { isAuthenticatedUser } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.js";
-import { getNotification } from "../controllers/notificationcontrollers.js";
+import { getNotification, getUserNotifications } from "../controllers/notificationcontrollers.js";
 //import multer from "multer";
 //const upload = multer({dest: "./backend/uploads"})
 
@@ -24,7 +24,7 @@ router.route('/searchUser').get(findUser);
 router.route('/like/:username').put(isAuthenticatedUser, like);
 router.route('/connect/:username').put(isAuthenticatedUser, follow);
 router.route('/:username').get(getotherUser);
-router.route("/notification/:notificationId").get(isAuthenticatedUser, getNotification)
+router.route("/notification/:userid").get(isAuthenticatedUser, getUserNotifications)
 //router.route("/getfollowers/:userid").get(getfollowers);
 //router.route("/getfollowing/:userid").get(getfollowing);
 router.route("/getuserbyskill").post(getuserskill);
@@ -33,6 +33,9 @@ router.route("/getUserPost").post(getUserPostsById);
 router.route("/getfollowers").post(getfollowers);
 router.route("/getfollowing").post(getfollowing);
 
+
+
+//notification related
 
 
 export default router;
