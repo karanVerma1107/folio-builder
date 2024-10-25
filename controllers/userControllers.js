@@ -898,32 +898,31 @@ export const getfollowers = asyncHandler(async (req, res, next) => {
 
 
 
-
-
-
-
-//get users by skills 
-export const getuserskill = asyncHandler(async(req,res,next)=>{
+// get users by skills 
+export const getuserskill = asyncHandler(async (req, res, next) => {
     const skill = req.query.skill;
 
-    if(!skill){
+    if (!skill) {
         return next(new ErrorHandler("write skill to get users", 400));
     }
-    try {//new learning below for array
-        const users = await user.find({
-            skills: new RegExp(skill, 'i')
-        });
+    try {
+        // Find users with the specified skill and select only the required fields
+        const users = await user.find({ skills: new RegExp(skill, 'i') })
+            .select('display_pic userName'); // Select only display_pic and userName
 
         res.status(200).json({
             users
-        })
+        });
     } catch (error) {
         console.log("error while getting users is: ", error);
         return next(new ErrorHandler("internal server error", 500));
     }
-})
+});
 
- 
+
+
+
+
 
 export const getUserPostsById = async (req, res) => {
     const { id } = req.body; // Get user ID from request body
