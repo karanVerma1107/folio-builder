@@ -923,21 +923,23 @@ export const getuserskill = asyncHandler(async (req, res, next) => {
 
 
 
-
-export const getUserPostsById = async (req, res) => {
-    const { id } = req.body; // Get user ID from request body
+export const  getUserPostsById  = async (req, res) => {
+    const { id, category } = req.body; // Get user ID and category from request body
 
     try {
-        console.log("ID is", id);
+        console.log("ID is", id, "Category is", category);
         
         // Find the user by ID
-        const User = await user.findById(id); // Instance variable
+        const User = await user.findById(id);
         if (!User) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Fetch posts in a single query for efficiency
-        const validPosts = await Post.find({ _id: { $in: User.posts } }).populate("user_name", "display_pic userName").populate("commentla");
+        // Fetch posts in a single query for efficiency, filtering by category
+        const validPosts = await Post.find({
+            _id: { $in: User.posts },
+            category: category // Filter by category
+        }).populate("user_name", "display_pic userName").populate("commentla");
 
         // Return the array of valid posts
         return res.status(200).json({ posts: validPosts.reverse() });
