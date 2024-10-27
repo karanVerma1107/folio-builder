@@ -336,3 +336,48 @@ export const getAllposts = asyncHandler(async(req,res,next)=>{
         posts
     })
 })
+
+
+
+
+
+
+
+
+
+
+
+
+export const deletepost =  async (req, res, next) => {
+    const curr = req.user; // Get the currently authenticated user
+    const userId = curr._id; // Extract user ID
+    const postId = req.params.postId; // Get post ID from request parameters
+
+    try {
+        // Find the post by ID
+        
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Check if the user ID matches the user_name of the post
+        if (!post.user_name.equals(userId)) {
+            return res.status(403).json({ error: 'You are not authorized to delete this post' });
+        }
+
+        // Delete the post from the Post collection
+        await Post.findByIdAndDelete(postId);
+
+        // Remove the post reference from the user's posts array
+        await user.findByIdAndUpdate(
+            userId,
+            { $pull: { posts: postId } },
+            { new: true }
+        );
+
+        return res.status(200).json({ message: 'Post deleted successfully' });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
