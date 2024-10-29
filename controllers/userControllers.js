@@ -22,6 +22,7 @@ const generateOTP = ()=>{
 
 //generate and save tokens 
 const generateAndsaveTokens = async(user, res)=>{
+    console.log("chlra hu")
     try {
         const refreshToken = user.generateRefreshToken();
         user.refreshToken = refreshToken;
