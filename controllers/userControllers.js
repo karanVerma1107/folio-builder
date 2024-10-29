@@ -84,11 +84,11 @@ const email = req.body.email;
 
         await tempUser.save();
       
-        const text = `Your  OTP for signUP in Stage with username: ${tempUser.Name} is: ${otp}`;
+        const text = `Your  OTP for signUP in PortX with username: ${tempUser.Name} is: ${otp}`;
         
         await sendEmail({
             email: tempUser.Email,
-            subject: 'Stage otp verificationn for sign UP',
+            subject: 'PortX otp verificationn for sign UP',
             text
         });
 
@@ -299,11 +299,11 @@ if(!User){
   }else{
     return next(new ErrorHandler('User not found with this Email', 404))
   }
-        const text = `Your  OTP for Login in Stage with username: ${User.userName} is: ${otp}`;
+        const text = `Your  OTP for Login in PortX with username: ${User.userName} is: ${otp}`;
         
         await sendEmail({
             email: User.Email,
-            subject: 'Stage otp verificationn for sign UP',
+            subject: 'PortX otp verificationn for sign UP',
             text
         });
 
