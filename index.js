@@ -14,10 +14,12 @@ const app = express();
 
 
 import cors from 'cors';
-app.use(cors());
+app.use(cors({
+    origin: 'https://portxx.netlify.app', // Your Netlify site
+    credentials: true // Allow credentials (cookies) to be sent
+}));
 
-//origin: 'https://portxx.netlify.app', // Your Netlify site
- //   credentials: true // Allow credentials (cookies) to be sent
+
 
 app.use(express.json());
 app.use(cookieParser());
