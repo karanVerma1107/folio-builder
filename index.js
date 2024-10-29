@@ -7,7 +7,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import errorHandler from './middleware/errorhandler.js';
 
+
+
+
 const app = express();
+
+
+import cors from 'cors';
+app.use(cors());
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -45,9 +53,6 @@ app.use("/api/v1", replyrouter);
 app.use(errorHandler);
 
 
-
-import cors from 'cors';
-app.use(cors());
 
 connectDB();
 console.log("port from env is: ", process.env.PORT);
