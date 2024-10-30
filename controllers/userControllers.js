@@ -396,7 +396,7 @@ try{
 
     res.cookie('accessToken', null,{
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         expireSIn: new Date(0),
         path:'/'
     })
