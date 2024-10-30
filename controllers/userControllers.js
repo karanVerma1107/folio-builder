@@ -397,13 +397,15 @@ try{
     res.cookie('accessToken', null,{
         httpOnly: true,
         secure: true,
+        sameSite: 'None',
         expireSIn: new Date(0),
         path:'/'
     })
 
     res.clearCookie('ascessToken',{
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
+        sameSite: 'None',
         expireSIn: new Date(0),
         path:'/'
 
