@@ -202,6 +202,8 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
     console.log("function run hua bhai")
     try{
     const { username } = req.body;
+    username = username.trim();
+
 
     if(username.length <= 4){
         return  next(new ErrorHandler('username should be more than 4 characters.', 400));
