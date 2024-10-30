@@ -202,7 +202,8 @@ export const verifyLoginOtp = asyncHandler(async (req,res,next)=>{
     console.log("function run hua bhai")
     try{
     const { username } = req.body;
-    username = username.trim();
+   // username = username.trim();
+  
 
 
     if(username.length <= 4){
